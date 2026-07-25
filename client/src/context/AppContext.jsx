@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { fetchMembers, fetchServices, fetchSchedule } from '../services/api';
+import { fetchMembers, fetchServices, fetchSchedule, fetchAvailability } from '../services/api';
 
 const AppContext = createContext();
 
@@ -24,14 +24,11 @@ export function AppProvider({ children }) {
   const loadAllData = async () => {
     setLoading(true);
     try {
-      let availUrl = `/api/availability?month=${month}`;
-      if (church !== 'Todas') availUrl += `&church=${encodeURIComponent(church)}`;
-      
       const [membersRes, servicesRes, schedRes, availRes] = await Promise.all([
         fetchMembers(),
         fetchServices(church === 'Todas' ? '' : church, month),
         fetchSchedule(church === 'Todas' ? '' : church, month),
-        fetch(availUrl).then((r) => (r.ok ? r.json() : [])).catch(() => [])
+        fetchAvailability(church, month)
       ]);
       setMembers(membersRes);
       setServices(servicesRes);

@@ -78,7 +78,43 @@ export async function fetchSchedule(church, month) {
   }
 }
 
+export async function fetchAvailability(church, month) {
+  const cacheKey = `le_avail_${church || 'all'}_${month || 'all'}`;
+  try {
+    let url = `${BASE_URL}/availability?`;
+    if (church && church !== 'Todas') url += `church=${encodeURIComponent(church)}&`;
+    if (month) url += `month=${encodeURIComponent(month)}`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error();
+    const serverData = await res.json();
+
+    const localSubmissions = loadFromCache('le_local_avail') || [];
+    const map = new Map();
+    [...serverData, ...localSubmissions].forEach((item) => {
+      const key = `${item.service_id}_${(item.member_name || '').toLowerCase()}`;
+      map.set(key, item);
+    });
+    const combined = Array.from(map.values());
+    saveToCache(cacheKey, combined);
+    return combined;
+  } catch {
+    const localSubmissions = loadFromCache('le_local_avail') || [];
+    return loadFromCache(cacheKey) || localSubmissions;
+  }
+}
+
 export async function submitAvailability(data) {
+  const existingLocal = loadFromCache('le_local_avail') || [];
+  const newItems = (data.service_ids || []).map((sId, index) => ({
+    id: Date.now() + index,
+    service_id: sId,
+    member_name: (data.member_name || '').toUpperCase().trim(),
+    role: data.role,
+    notes: data.notes || ''
+  }));
+  const updatedLocal = [...existingLocal, ...newItems];
+  saveToCache('le_local_avail', updatedLocal);
+
   try {
     const res = await fetch(`${BASE_URL}/availability`, {
       method: 'POST',
@@ -158,6 +194,7 @@ export async function clearAllSchedules() {
 }
 
 export async function clearAllAvailability() {
+  saveToCache('le_local_avail', []);
   try {
     const res = await fetch(`${BASE_URL}/availability/clear-all`, {
       method: 'POST',
