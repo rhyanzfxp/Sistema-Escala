@@ -1,4 +1,5 @@
 const BASE_URL = '/api';
+const CLOUD_STORE_URL = 'https://api.restful-api.dev/objects/ff8081819f7e10ae019f9b9d1d212880';
 
 const FALLBACK_MEMBERS = [
   { id: 1, name: 'JEREMIAS', default_role: 'Baixo' },
@@ -34,6 +35,38 @@ function loadFromCache(key) {
   }
 }
 
+let localCloudCache = { published: false, schedules: {}, availability: [] };
+
+async function syncWithCloudStore() {
+  try {
+    const res = await fetch(CLOUD_STORE_URL);
+    if (res.ok) {
+      const result = await res.json();
+      if (result && result.data) {
+        localCloudCache = result.data;
+        saveToCache('le_cloud_store', localCloudCache);
+      }
+    }
+  } catch (e) {
+    localCloudCache = loadFromCache('le_cloud_store') || localCloudCache;
+  }
+}
+
+async function saveCloudStore(newData) {
+  localCloudCache = { ...localCloudCache, ...newData };
+  saveToCache('le_cloud_store', localCloudCache);
+  try {
+    await fetch(CLOUD_STORE_URL, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: 'louvor-escala-prod-store',
+        data: localCloudCache
+      })
+    });
+  } catch (e) {}
+}
+
 export async function fetchMembers() {
   try {
     const res = await fetch(`${BASE_URL}/members`);
@@ -63,23 +96,23 @@ export async function fetchServices(church, month) {
 }
 
 export async function fetchSchedule(church, month) {
+  await syncWithCloudStore();
   const cacheKey = `le_schedule_${church || 'all'}_${month || 'all'}`;
   try {
     let url = `${BASE_URL}/schedule?`;
     if (church) url += `church=${encodeURIComponent(church)}&`;
     if (month) url += `month=${encodeURIComponent(month)}`;
     const res = await fetch(url);
-    if (!res.ok) throw new Error();
-    let data = await res.json();
+    let data = res.ok ? await res.json() : [];
 
-    const localSchedules = loadFromCache('le_local_schedules') || {};
-    const localPublished = loadFromCache('le_local_published');
+    const cloudSchedules = localCloudCache.schedules || {};
+    const cloudPublished = localCloudCache.published;
 
     data = data.map((item) => {
-      const override = localSchedules[item.service_id];
+      const override = cloudSchedules[item.service_id];
       const merged = override ? { ...item, ...override } : item;
-      if (localPublished !== null && localPublished !== undefined) {
-        merged.published = localPublished ? 1 : 0;
+      if (cloudPublished !== undefined) {
+        merged.published = cloudPublished ? 1 : 0;
       }
       return merged;
     });
@@ -88,14 +121,14 @@ export async function fetchSchedule(church, month) {
     return data;
   } catch {
     const cached = loadFromCache(cacheKey) || [];
-    const localSchedules = loadFromCache('le_local_schedules') || {};
-    const localPublished = loadFromCache('le_local_published');
+    const cloudSchedules = localCloudCache.schedules || {};
+    const cloudPublished = localCloudCache.published;
 
     return cached.map((item) => {
-      const override = localSchedules[item.service_id];
+      const override = cloudSchedules[item.service_id];
       const merged = override ? { ...item, ...override } : item;
-      if (localPublished !== null && localPublished !== undefined) {
-        merged.published = localPublished ? 1 : 0;
+      if (cloudPublished !== undefined) {
+        merged.published = cloudPublished ? 1 : 0;
       }
       return merged;
     });
@@ -103,18 +136,18 @@ export async function fetchSchedule(church, month) {
 }
 
 export async function fetchAvailability(church, month) {
+  await syncWithCloudStore();
   const cacheKey = `le_avail_${church || 'all'}_${month || 'all'}`;
   try {
     let url = `${BASE_URL}/availability?`;
     if (church && church !== 'Todas') url += `church=${encodeURIComponent(church)}&`;
     if (month) url += `month=${encodeURIComponent(month)}`;
     const res = await fetch(url);
-    if (!res.ok) throw new Error();
-    const serverData = await res.json();
+    const serverData = res.ok ? await res.json() : [];
 
-    const localSubmissions = loadFromCache('le_local_avail') || [];
+    const cloudAvail = localCloudCache.availability || [];
     const map = new Map();
-    [...serverData, ...localSubmissions].forEach((item) => {
+    [...serverData, ...cloudAvail].forEach((item) => {
       const key = `${item.service_id}_${(item.member_name || '').toLowerCase()}`;
       map.set(key, item);
     });
@@ -122,13 +155,13 @@ export async function fetchAvailability(church, month) {
     saveToCache(cacheKey, combined);
     return combined;
   } catch {
-    const localSubmissions = loadFromCache('le_local_avail') || [];
-    return loadFromCache(cacheKey) || localSubmissions;
+    const cloudAvail = localCloudCache.availability || [];
+    return loadFromCache(cacheKey) || cloudAvail;
   }
 }
 
 export async function submitAvailability(data) {
-  const existingLocal = loadFromCache('le_local_avail') || [];
+  const currentAvail = localCloudCache.availability || [];
   const newItems = (data.service_ids || []).map((sId, index) => ({
     id: Date.now() + index,
     service_id: sId,
@@ -136,20 +169,17 @@ export async function submitAvailability(data) {
     role: data.role,
     notes: data.notes || ''
   }));
-  const updatedLocal = [...existingLocal, ...newItems];
-  saveToCache('le_local_avail', updatedLocal);
+  const updatedAvail = [...currentAvail, ...newItems];
+  await saveCloudStore({ availability: updatedAvail });
 
   try {
-    const res = await fetch(`${BASE_URL}/availability`, {
+    await fetch(`${BASE_URL}/availability`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data)
     });
-    if (!res.ok) throw new Error();
-    return await res.json();
-  } catch {
-    return { success: true, count: data.service_ids?.length || 0 };
-  }
+  } catch (e) {}
+  return { success: true, count: data.service_ids?.length || 0 };
 }
 
 export async function fetchAvailableSubstitutes(serviceId, role) {
@@ -177,24 +207,21 @@ export async function executeSwap(swapData) {
 }
 
 export async function updateServiceSchedule(scheduleData) {
-  const localSchedules = loadFromCache('le_local_schedules') || {};
-  localSchedules[scheduleData.service_id] = {
+  const currentSchedules = localCloudCache.schedules || {};
+  currentSchedules[scheduleData.service_id] = {
     ...scheduleData,
     updated_at: new Date().toISOString()
   };
-  saveToCache('le_local_schedules', localSchedules);
+  await saveCloudStore({ schedules: currentSchedules });
 
   try {
-    const res = await fetch(`${BASE_URL}/schedule`, {
+    await fetch(`${BASE_URL}/schedule`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(scheduleData)
     });
-    if (!res.ok) throw new Error();
-    return await res.json();
-  } catch {
-    return { success: true };
-  }
+  } catch (e) {}
+  return { success: true };
 }
 
 export async function addMember(memberData) {
@@ -212,46 +239,37 @@ export async function addMember(memberData) {
 }
 
 export async function clearAllSchedules() {
-  saveToCache('le_local_schedules', {});
+  await saveCloudStore({ schedules: {} });
   try {
-    const res = await fetch(`${BASE_URL}/schedule/clear-all`, {
+    await fetch(`${BASE_URL}/schedule/clear-all`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' }
     });
-    if (!res.ok) throw new Error();
-    return await res.json();
-  } catch {
-    return { success: true };
-  }
+  } catch (e) {}
+  return { success: true };
 }
 
 export async function clearAllAvailability() {
-  saveToCache('le_local_avail', []);
+  await saveCloudStore({ availability: [] });
   try {
-    const res = await fetch(`${BASE_URL}/availability/clear-all`, {
+    await fetch(`${BASE_URL}/availability/clear-all`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' }
     });
-    if (!res.ok) throw new Error();
-    return await res.json();
-  } catch {
-    return { success: true };
-  }
+  } catch (e) {}
+  return { success: true };
 }
 
 export async function togglePublishSchedule(params) {
-  saveToCache('le_local_published', params.published);
+  await saveCloudStore({ published: !!params.published });
   try {
-    const res = await fetch(`${BASE_URL}/schedule/publish`, {
+    await fetch(`${BASE_URL}/schedule/publish`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(params)
     });
-    if (!res.ok) throw new Error();
-    return await res.json();
-  } catch {
-    return { success: true };
-  }
+  } catch (e) {}
+  return { success: true };
 }
 
 export function formatDateBR(dateStr) {
@@ -262,4 +280,3 @@ export function formatDateBR(dateStr) {
   }
   return dateStr;
 }
-
