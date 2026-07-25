@@ -1,0 +1,47 @@
+CREATE TABLE IF NOT EXISTS members (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  name TEXT UNIQUE NOT NULL,
+  default_role TEXT NOT NULL,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS services (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  church TEXT NOT NULL,
+  date TEXT NOT NULL,
+  day_time TEXT NOT NULL,
+  title TEXT NOT NULL,
+  week_num INTEGER DEFAULT 1
+);
+
+CREATE TABLE IF NOT EXISTS availability (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  service_id INTEGER NOT NULL,
+  member_name TEXT NOT NULL,
+  role TEXT NOT NULL,
+  notes TEXT,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (service_id) REFERENCES services(id)
+);
+
+CREATE TABLE IF NOT EXISTS schedule (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  service_id INTEGER UNIQUE NOT NULL,
+  keyboard_member TEXT DEFAULT '',
+  guitar_member TEXT DEFAULT '',
+  bass_member TEXT DEFAULT '',
+  drums_member TEXT DEFAULT '',
+  vocal_members TEXT DEFAULT '',
+  published INTEGER DEFAULT 0,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (service_id) REFERENCES services(id)
+);
+
+CREATE TABLE IF NOT EXISTS swap_logs (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  service_id INTEGER NOT NULL,
+  role TEXT NOT NULL,
+  old_member TEXT NOT NULL,
+  new_member TEXT NOT NULL,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
