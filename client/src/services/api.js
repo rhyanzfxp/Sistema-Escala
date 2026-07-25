@@ -70,11 +70,35 @@ export async function fetchSchedule(church, month) {
     if (month) url += `month=${encodeURIComponent(month)}`;
     const res = await fetch(url);
     if (!res.ok) throw new Error();
-    const data = await res.json();
+    let data = await res.json();
+
+    const localSchedules = loadFromCache('le_local_schedules') || {};
+    const localPublished = loadFromCache('le_local_published');
+
+    data = data.map((item) => {
+      const override = localSchedules[item.service_id];
+      const merged = override ? { ...item, ...override } : item;
+      if (localPublished !== null && localPublished !== undefined) {
+        merged.published = localPublished ? 1 : 0;
+      }
+      return merged;
+    });
+
     saveToCache(cacheKey, data);
     return data;
   } catch {
-    return loadFromCache(cacheKey) || [];
+    const cached = loadFromCache(cacheKey) || [];
+    const localSchedules = loadFromCache('le_local_schedules') || {};
+    const localPublished = loadFromCache('le_local_published');
+
+    return cached.map((item) => {
+      const override = localSchedules[item.service_id];
+      const merged = override ? { ...item, ...override } : item;
+      if (localPublished !== null && localPublished !== undefined) {
+        merged.published = localPublished ? 1 : 0;
+      }
+      return merged;
+    });
   }
 }
 
@@ -153,6 +177,13 @@ export async function executeSwap(swapData) {
 }
 
 export async function updateServiceSchedule(scheduleData) {
+  const localSchedules = loadFromCache('le_local_schedules') || {};
+  localSchedules[scheduleData.service_id] = {
+    ...scheduleData,
+    updated_at: new Date().toISOString()
+  };
+  saveToCache('le_local_schedules', localSchedules);
+
   try {
     const res = await fetch(`${BASE_URL}/schedule`, {
       method: 'POST',
@@ -181,6 +212,7 @@ export async function addMember(memberData) {
 }
 
 export async function clearAllSchedules() {
+  saveToCache('le_local_schedules', {});
   try {
     const res = await fetch(`${BASE_URL}/schedule/clear-all`, {
       method: 'POST',
@@ -208,6 +240,7 @@ export async function clearAllAvailability() {
 }
 
 export async function togglePublishSchedule(params) {
+  saveToCache('le_local_published', params.published);
   try {
     const res = await fetch(`${BASE_URL}/schedule/publish`, {
       method: 'POST',
