@@ -1,7 +1,30 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { updateServiceSchedule, addMember, clearAllSchedules, clearAllAvailability, togglePublishSchedule, formatDateBR } from '../services/api';
-import { Shield, Save, UserPlus, Users, Trash2, Send, X, Check, Music, Disc, Mic, Volume2, Calendar, Radio, AlertTriangle } from 'lucide-react';
+import { Shield, Save, UserPlus, Users, Trash2, Send, X, Check, Music, Disc, Mic, Volume2, Calendar, Radio, AlertTriangle, ChevronDown } from 'lucide-react';
+
+const ROLE_MAP = {
+  keyboard_member: 'Teclado',
+  guitar_member:   'Violão',
+  bass_member:     'Baixo',
+  drums_member:    'Bateria',
+};
+
+function filterByRole(members, role) {
+  return members.filter((m) => (m.default_role || '').toLowerCase() === role.toLowerCase());
+}
+
+function isAvailable(avails, memberName) {
+  return avails.some((a) => (a.member_name || '').toLowerCase() === memberName.toLowerCase());
+}
+
+function isAvailableForRole(avails, memberName, role) {
+  return avails.some(
+    (a) =>
+      (a.member_name || '').toLowerCase() === memberName.toLowerCase() &&
+      (a.role || '').toLowerCase().includes(role.toLowerCase())
+  );
+}
 
 export default function AdminPanel() {
   const { services, scheduleData, availabilityList, members, church, month, showToast, loadAllData } = useApp();
@@ -74,7 +97,11 @@ export default function AdminPanel() {
   const handleClearAll = async () => {
     setShowClearSchedModal(false);
     try {
+      // Limpa cloud store + todos os caches locais de escala
       await clearAllSchedules();
+      Object.keys(localStorage)
+        .filter((k) => k.startsWith('le_schedule') || k === 'le_cloud_store')
+        .forEach((k) => localStorage.removeItem(k));
       showToast('Todas as escalas foram zeradas!', 'success');
       await loadAllData();
     } catch (err) {
@@ -85,7 +112,11 @@ export default function AdminPanel() {
   const handleClearAvailability = async () => {
     setShowClearAvailModal(false);
     try {
+      // Limpa cloud store + todos os caches locais de disponibilidade
       await clearAllAvailability();
+      Object.keys(localStorage)
+        .filter((k) => k.startsWith('le_avail') || k === 'le_cloud_store')
+        .forEach((k) => localStorage.removeItem(k));
       showToast('Todas as disponibilidades foram removidas!', 'success');
       await loadAllData();
     } catch (err) {
@@ -275,138 +306,176 @@ export default function AdminPanel() {
 
             {(() => {
               const serviceAvails = availabilityList.filter((a) => a.service_id === activeModalService.id);
+
+              // Selects filtrados por instrumento
+              const roleFields = [
+                { key: 'keyboard_member', label: 'Teclado',         role: 'Teclado',  icon: <Music   size={15} color="var(--primary)" /> },
+                { key: 'guitar_member',   label: 'Violão / Guitarra', role: 'Violão',  icon: <Volume2 size={15} color="var(--primary)" /> },
+                { key: 'bass_member',     label: 'Baixo',            role: 'Baixo',    icon: <Radio   size={15} color="var(--primary)" /> },
+                { key: 'drums_member',    label: 'Bateria / Cajón',  role: 'Bateria',  icon: <Disc    size={15} color="var(--primary)" /> },
+              ];
+
+              const vocalMembers = filterByRole(members, 'Vocal');
+              const vocalAvails  = serviceAvails.filter((a) => (a.role || '').toLowerCase().includes('vocal'));
+
               return (
                 <form onSubmit={handleSaveSchedule} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+                  {/* Voluntários disponíveis agrupados por instrumento */}
                   <div style={{ background: 'rgba(10, 14, 23, 0.6)', padding: '0.75rem 1rem', borderRadius: '10px', border: '1px solid var(--border-color)' }}>
-                    <div style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary)', marginBottom: '0.4rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                      <Users size={15} /> Voluntários Disponíveis (Toque para alocar):
+                    <div style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary)', marginBottom: '0.6rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                      <Users size={15} /> Voluntários Disponíveis — toque para alocar automaticamente:
                     </div>
                     {serviceAvails.length === 0 ? (
                       <div style={{ fontSize: '0.8rem', color: 'var(--text-dark)' }}>Nenhum voluntário respondeu disponível para este culto.</div>
                     ) : (
-                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem' }}>
-                        {serviceAvails.map((a) => (
-                          <button
-                            type="button"
-                            key={a.id}
-                            onClick={() => {
-                              const r = a.role.toLowerCase();
-                              if (r.includes('teclado')) setEditForm((prev) => ({ ...prev, keyboard_member: a.member_name }));
-                              else if (r.includes('viol') || r.includes('guit')) setEditForm((prev) => ({ ...prev, guitar_member: a.member_name }));
-                              else if (r.includes('baixo')) setEditForm((prev) => ({ ...prev, bass_member: a.member_name }));
-                              else if (r.includes('bater')) setEditForm((prev) => ({ ...prev, drums_member: a.member_name }));
-                              else if (r.includes('vocal')) {
-                                setEditForm((prev) => ({
-                                  ...prev,
-                                  vocal_members: prev.vocal_members && prev.vocal_members !== '-' ? `${prev.vocal_members} / ${a.member_name}` : a.member_name
-                                }));
-                              }
-                              showToast(`${a.member_name} selecionado para ${a.role}!`, 'success');
-                            }}
-                            style={{
-                              background: 'rgba(201, 168, 122, 0.15)',
-                              border: '1px solid rgba(201, 168, 122, 0.3)',
-                              color: '#f5ede0',
-                              padding: '0.35rem 0.7rem',
-                              borderRadius: '8px',
-                              fontSize: '0.8rem',
-                              fontWeight: 600,
-                              cursor: 'pointer'
-                            }}
-                          >
-                            + {a.member_name} ({a.role})
-                          </button>
-                        ))}
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                        {['Teclado', 'Violão', 'Baixo', 'Bateria', 'Vocal'].map((cat) => {
+                          const catAvails = serviceAvails.filter((a) => (a.role || '').toLowerCase().includes(cat.toLowerCase()));
+                          if (catAvails.length === 0) return null;
+                          return (
+                            <div key={cat} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
+                              <span style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--text-muted)', minWidth: '56px' }}>{cat}:</span>
+                              {catAvails.map((a) => (
+                                <button
+                                  type="button"
+                                  key={`${a.id}-${a.member_name}`}
+                                  onClick={() => {
+                                    const r = (a.role || '').toLowerCase();
+                                    if (r.includes('teclado')) setEditForm((prev) => ({ ...prev, keyboard_member: a.member_name }));
+                                    else if (r.includes('viol') || r.includes('guit')) setEditForm((prev) => ({ ...prev, guitar_member: a.member_name }));
+                                    else if (r.includes('baixo')) setEditForm((prev) => ({ ...prev, bass_member: a.member_name }));
+                                    else if (r.includes('bater')) setEditForm((prev) => ({ ...prev, drums_member: a.member_name }));
+                                    else if (r.includes('vocal')) {
+                                      setEditForm((prev) => ({
+                                        ...prev,
+                                        vocal_members: prev.vocal_members && prev.vocal_members !== '-' ? `${prev.vocal_members} / ${a.member_name}` : a.member_name
+                                      }));
+                                    }
+                                    showToast(`${a.member_name} alocado em ${a.role}!`, 'success');
+                                  }}
+                                  style={{
+                                    background: 'rgba(99, 102, 241, 0.15)',
+                                    border: '1px solid rgba(99, 102, 241, 0.35)',
+                                    color: '#a5b4fc',
+                                    padding: '0.25rem 0.65rem',
+                                    borderRadius: '8px',
+                                    fontSize: '0.78rem',
+                                    fontWeight: 600,
+                                    cursor: 'pointer',
+                                    transition: 'all 0.15s'
+                                  }}
+                                >
+                                  + {a.member_name}
+                                </button>
+                              ))}
+                            </div>
+                          );
+                        })}
                       </div>
                     )}
                   </div>
 
+                  {/* Selects filtrados por instrumento */}
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.85rem' }}>
-                    <div>
-                      <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                        <Music size={15} color="var(--primary)" /> Teclado
-                      </label>
-                      <select
-                        className="form-select"
-                        value={editForm.keyboard_member}
-                        onChange={(e) => setEditForm({ ...editForm, keyboard_member: e.target.value })}
-                      >
-                        <option value="-">- Ninguém</option>
-                        <option value="CONVIDADO">CONVIDADO</option>
-                        {members.map((m) => (
-                          <option key={m.id} value={m.name}>
-                            {m.name} {serviceAvails.some((a) => a.member_name === m.name) ? '(Disponível)' : ''}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                        <Volume2 size={15} color="var(--primary)" /> Violão / Guitarra
-                      </label>
-                      <select
-                        className="form-select"
-                        value={editForm.guitar_member}
-                        onChange={(e) => setEditForm({ ...editForm, guitar_member: e.target.value })}
-                      >
-                        <option value="-">- Ninguém</option>
-                        <option value="CONVIDADO">CONVIDADO</option>
-                        {members.map((m) => (
-                          <option key={m.id} value={m.name}>
-                            {m.name} {serviceAvails.some((a) => a.member_name === m.name) ? '(Disponível)' : ''}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                        <Radio size={15} color="var(--primary)" /> Baixo
-                      </label>
-                      <select
-                        className="form-select"
-                        value={editForm.bass_member}
-                        onChange={(e) => setEditForm({ ...editForm, bass_member: e.target.value })}
-                      >
-                        <option value="-">- Ninguém</option>
-                        <option value="CONVIDADO">CONVIDADO</option>
-                        {members.map((m) => (
-                          <option key={m.id} value={m.name}>
-                            {m.name} {serviceAvails.some((a) => a.member_name === m.name) ? '(Disponível)' : ''}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                        <Disc size={15} color="var(--primary)" /> Bateria / Cajón
-                      </label>
-                      <select
-                        className="form-select"
-                        value={editForm.drums_member}
-                        onChange={(e) => setEditForm({ ...editForm, drums_member: e.target.value })}
-                      >
-                        <option value="-">- Ninguém</option>
-                        <option value="CONVIDADO">CONVIDADO</option>
-                        {members.map((m) => (
-                          <option key={m.id} value={m.name}>
-                            {m.name} {serviceAvails.some((a) => a.member_name === m.name) ? '(Disponível)' : ''}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
+                    {roleFields.map(({ key, label, role, icon }) => {
+                      const filtered = filterByRole(members, role);
+                      return (
+                        <div key={key}>
+                          <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                            {icon} {label}
+                          </label>
+                          <select
+                            className="form-select"
+                            value={editForm[key]}
+                            onChange={(e) => setEditForm({ ...editForm, [key]: e.target.value })}
+                          >
+                            <option value="-">- Ninguém</option>
+                            <option value="CONVIDADO">CONVIDADO</option>
+                            {/* Disponíveis primeiro */}
+                            {filtered.filter((m) => isAvailableForRole(serviceAvails, m.name, role)).map((m) => (
+                              <option key={`avail-${m.id}`} value={m.name}>
+                                {m.name} (Disponível)
+                              </option>
+                            ))}
+                            {/* Demais do mesmo instrumento */}
+                            {filtered.filter((m) => !isAvailableForRole(serviceAvails, m.name, role)).map((m) => (
+                              <option key={m.id} value={m.name}>
+                                {m.name}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      );
+                    })}
                   </div>
 
+                  {/* Vocais: select múltiplo filtrado por Vocal */}
                   <div>
                     <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                       <Mic size={15} color="var(--primary)" /> Ministro / Vocais
                     </label>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem', marginBottom: '0.4rem' }}>
+                      {vocalAvails.map((a) => (
+                        <button
+                          type="button"
+                          key={`vavail-${a.id}-${a.member_name}`}
+                          onClick={() =>
+                            setEditForm((prev) => ({
+                              ...prev,
+                              vocal_members:
+                                prev.vocal_members && prev.vocal_members !== '-'
+                                  ? prev.vocal_members.includes(a.member_name)
+                                    ? prev.vocal_members
+                                    : `${prev.vocal_members} / ${a.member_name}`
+                                  : a.member_name
+                            }))
+                          }
+                          style={{
+                            background: 'rgba(99,102,241,0.13)',
+                            border: '1px solid rgba(99,102,241,0.3)',
+                            color: '#a5b4fc',
+                            padding: '0.2rem 0.55rem',
+                            borderRadius: '6px',
+                            fontSize: '0.75rem',
+                            fontWeight: 600,
+                            cursor: 'pointer'
+                          }}
+                        >
+                          + {a.member_name}
+                        </button>
+                      ))}
+                    </div>
+                    <select
+                      className="form-select"
+                      value=""
+                      onChange={(e) => {
+                        if (!e.target.value) return;
+                        const name = e.target.value;
+                        setEditForm((prev) => ({
+                          ...prev,
+                          vocal_members:
+                            prev.vocal_members && prev.vocal_members !== '-'
+                              ? prev.vocal_members.includes(name)
+                                ? prev.vocal_members
+                                : `${prev.vocal_members} / ${name}`
+                              : name
+                        }));
+                        e.target.value = '';
+                      }}
+                      style={{ marginBottom: '0.4rem' }}
+                    >
+                      <option value="">Adicionar vocal pelo nome...</option>
+                      <option value="CONVIDADO">CONVIDADO</option>
+                      {vocalMembers.map((m) => (
+                        <option key={m.id} value={m.name}>
+                          {m.name}{isAvailableForRole(serviceAvails, m.name, 'Vocal') ? ' (Disponível)' : ''}
+                        </option>
+                      ))}
+                    </select>
                     <input
                       type="text"
                       className="form-input"
-                      placeholder="Ex: ANDREIA / BARBARA"
+                      placeholder="Ex: ANDREIA / BARBARA (edite livremente)"
                       value={editForm.vocal_members}
                       onChange={(e) => setEditForm({ ...editForm, vocal_members: e.target.value })}
                     />
