@@ -115,7 +115,7 @@ export default function AvailabilityForm() {
                 cursor: 'pointer'
               }}
             >
-              {isCustomName ? 'Escolher da lista' : '+ Outro nome?'}
+              {isCustomName ? 'Escolher da lista' : '+ Convidado?'}
             </button>
           </div>
 
