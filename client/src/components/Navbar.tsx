@@ -1,15 +1,28 @@
-import React, { useState, useRef, FormEvent } from 'react';
+import React, { useState, useRef, FormEvent, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
-import { Shield, ShieldAlert, Calendar } from 'lucide-react';
+import { Shield, ShieldAlert, Calendar, Bell, BellRing } from 'lucide-react';
+import { isNotificationGranted, checkUpcomingScheduleReminders } from '../services/notifications';
+import NotificationModal from './NotificationModal';
 
 export default function Navbar() {
-  const { church, setChurch, month, setMonth, isAdmin, setIsAdmin, showToast } = useApp();
+  const { church, setChurch, month, setMonth, isAdmin, setIsAdmin, showToast, scheduleData } = useApp();
   const [pinInput, setPinInput] = useState<string>('');
   const [showPinModal, setShowPinModal] = useState<boolean>(false);
+  const [showNotifModal, setShowNotifModal] = useState<boolean>(false);
+  const [notifActive, setNotifActive] = useState<boolean>(false);
 
-  // Clique secreto no logo para abrir o painel admin
   const clickCount = useRef<number>(0);
   const clickTimer = useRef<NodeJS.Timeout | number | null>(null);
+
+  useEffect(() => {
+    setNotifActive(isNotificationGranted());
+  }, []);
+
+  useEffect(() => {
+    if (scheduleData && scheduleData.length > 0 && isNotificationGranted()) {
+      checkUpcomingScheduleReminders(scheduleData);
+    }
+  }, [scheduleData]);
 
   const handleLogoClick = () => {
     clickCount.current += 1;
@@ -108,6 +121,25 @@ export default function Navbar() {
             </select>
           </div>
 
+          <button
+            onClick={() => setShowNotifModal(true)}
+            className="btn btn-secondary"
+            title={notifActive ? 'Notificações Ativadas' : 'Ativar Notificações de Lembrete'}
+            style={{
+              padding: '0.35rem 0.65rem',
+              fontSize: '0.8rem',
+              height: '34px',
+              minHeight: '34px',
+              borderColor: notifActive ? 'rgba(34, 197, 94, 0.4)' : 'var(--border-color)',
+              color: notifActive ? '#4ade80' : 'var(--text-muted)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.35rem'
+            }}
+          >
+            {notifActive ? <BellRing size={15} /> : <Bell size={15} />}
+          </button>
+
           {isAdmin && (
             <button
               onClick={() => { setIsAdmin(false); showToast('Modo Voluntário ativado', 'success'); }}
@@ -120,6 +152,10 @@ export default function Navbar() {
           )}
         </div>
       </div>
+
+      {showNotifModal && (
+        <NotificationModal onClose={() => { setShowNotifModal(false); setNotifActive(isNotificationGranted()); }} />
+      )}
 
       {showPinModal && (
         <div className="modal-overlay" onClick={() => { setShowPinModal(false); setPinInput(''); }}>
