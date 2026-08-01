@@ -1,6 +1,6 @@
 import React, { useState, useEffect, FormEvent } from 'react';
 import { useApp } from '../context/AppContext';
-import { fetchAvailableSubstitutes, executeSwap } from '../services/api';
+import { fetchAvailableSubstitutes, executeSwap, cleanServiceTitle } from '../services/api';
 import { ArrowRightLeft, UserCheck, AlertTriangle, Check, X } from 'lucide-react';
 
 interface AvailableSubstitute {
@@ -21,7 +21,8 @@ export default function SwapModal() {
   const serviceId = item?.serviceId;
   const roleField = item?.roleField;
   const currentMember = item?.currentMember || '';
-  const serviceTitle = item?.title || '';
+  const rawServiceTitle = item?.title || '';
+  const formattedTitle = cleanServiceTitle(rawServiceTitle);
   const dateStr = item?.date || '';
 
   const roleLabelMap: Record<string, string> = {
@@ -35,20 +36,22 @@ export default function SwapModal() {
   const roleName = roleField ? (roleLabelMap[roleField] || 'Função') : 'Função';
 
   useEffect(() => {
-    if (swapModal.open && serviceId) {
+    if (swapModal.open && serviceId && roleField) {
       setLoadingSubs(true);
-      fetchAvailableSubstitutes(serviceId, roleName)
+      fetchAvailableSubstitutes(serviceId, roleField)
         .then((res) => {
-          const filtered = res.filter((sub) => sub.member_name !== currentMember);
+          const filtered = res.filter((sub) => sub.member_name.toUpperCase().trim() !== currentMember.toUpperCase().trim());
           setAvailableList(filtered);
           if (filtered.length > 0) {
             setSelectedSubstitute(filtered[0].member_name);
+          } else {
+            setSelectedSubstitute('');
           }
         })
         .catch(() => setAvailableList([]))
         .finally(() => setLoadingSubs(false));
     }
-  }, [swapModal.open, serviceId, roleName, currentMember]);
+  }, [swapModal.open, serviceId, roleField, currentMember]);
 
   if (!swapModal.open || !item || !serviceId || !roleField) return null;
 
@@ -72,6 +75,7 @@ export default function SwapModal() {
 
       showToast(`Troca realizada com sucesso! ${currentMember} ➔ ${finalNewMember}`, 'success');
       setSwapModal({ open: false, item: null });
+      setCustomName('');
       await loadAllData();
     } catch (err) {
       showToast('Erro ao realizar a troca', 'danger');
@@ -99,7 +103,7 @@ export default function SwapModal() {
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
             <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{dateStr}</span>
           </div>
-          <div style={{ fontWeight: 700, fontSize: '0.95rem' }}>{serviceTitle}</div>
+          <div style={{ fontWeight: 700, fontSize: '0.95rem' }}>{formattedTitle}</div>
           <div style={{ fontSize: '0.85rem', color: '#fca5a5', marginTop: '0.4rem', fontWeight: 600 }}>
             Função: {roleName} ({currentMember})
           </div>
@@ -108,7 +112,7 @@ export default function SwapModal() {
         <form onSubmit={handleConfirmSwap}>
           <div className="form-group">
             <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-              <UserCheck size={16} /> Voluntários que Informaram Disponibilidade
+              <UserCheck size={16} /> Voluntários Disponíveis neste Culto
             </label>
 
             {loadingSubs ? (
@@ -134,8 +138,15 @@ export default function SwapModal() {
                     }}
                   >
                     <div>
-                      <strong style={{ fontSize: '0.9rem' }}>{sub.member_name}</strong>
-                      {sub.notes && <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{sub.notes}</div>}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                        <strong style={{ fontSize: '0.9rem' }}>{sub.member_name}</strong>
+                        {sub.role && (
+                          <span style={{ fontSize: '0.72rem', background: 'rgba(201,168,122,0.15)', color: '#e5c99f', padding: '0.1rem 0.45rem', borderRadius: '6px', fontWeight: 600 }}>
+                            {sub.role}
+                          </span>
+                        )}
+                      </div>
+                      {sub.notes && <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.15rem' }}>{sub.notes}</div>}
                     </div>
                     {selectedSubstitute === sub.member_name && !customName && <Check size={18} color="var(--primary)" />}
                   </label>

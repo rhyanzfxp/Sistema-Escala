@@ -278,27 +278,62 @@ export async function submitAvailability(payload: SubmitAvailabilityPayload): Pr
   return { success: true, count: payload.service_ids.length };
 }
 
-export async function fetchAvailableSubstitutes(serviceId: number, role: string): Promise<Array<{ member_name: string; role: string; notes?: string }>> {
+function getRoleSearchKeywords(roleInput: string): string[] {
+  const lower = (roleInput || '').toLowerCase();
+  if (lower.includes('key') || lower.includes('tecla') || lower.includes('sanf')) {
+    return ['teclado', 'sanfona', 'piano', 'tecla'];
+  }
+  if (lower.includes('guit') || lower.includes('viol')) {
+    return ['violão', 'violao', 'guitarra', 'guit', 'viol'];
+  }
+  if (lower.includes('bass') || lower.includes('baixo')) {
+    return ['baixo', 'baixista', 'bass'];
+  }
+  if (lower.includes('drum') || lower.includes('bater') || lower.includes('caj')) {
+    return ['bateria', 'baterista', 'cajón', 'cajon', 'bater'];
+  }
+  if (lower.includes('voc') || lower.includes('cant') || lower.includes('minis')) {
+    return ['vocal', 'vocais', 'ministro', 'voz', 'voc'];
+  }
+  return [lower];
+}
+
+export async function fetchAvailableSubstitutes(serviceId: number, roleInput: string): Promise<Array<{ member_name: string; role: string; notes?: string }>> {
+  const keywords = getRoleSearchKeywords(roleInput);
+  let allAvails: Array<{ member_name: string; role: string; notes?: string }> = [];
+
   if (isSupabaseConfigured) {
     try {
       const { data, error } = await supabase
         .from('availability')
         .select('member_name, role, notes')
         .eq('service_id', serviceId)
-        .ilike('role', `%${role}%`)
         .order('member_name', { ascending: true });
 
       if (error) throw error;
-      return data || [];
+      if (data) allAvails = data;
     } catch (err) {
       console.error('Error fetching substitutes from Supabase:', err);
     }
   }
 
-  const avail = loadFromCache<Availability[]>('le_avail_all_all') || [];
-  return avail
-    .filter(a => a.service_id === serviceId && a.role.toLowerCase().includes(role.toLowerCase()))
-    .map(a => ({ member_name: a.member_name, role: a.role, notes: a.notes }));
+  if (allAvails.length === 0) {
+    const cached = loadFromCache<Availability[]>('le_avail_all_all') || [];
+    allAvails = cached
+      .filter(a => a.service_id === serviceId)
+      .map(a => ({ member_name: a.member_name, role: a.role, notes: a.notes }));
+  }
+
+  // 1. Filter by role matching keywords
+  const matched = allAvails.filter(a => {
+    const r = (a.role || '').toLowerCase();
+    return keywords.some(kw => r.includes(kw));
+  });
+
+  if (matched.length > 0) return matched;
+
+  // 2. If no exact instrument match, return all volunteers for that service
+  return allAvails;
 }
 
 export async function executeSwap(swapData: SwapDataPayload): Promise<{ success: boolean; updatedVal?: string }> {
