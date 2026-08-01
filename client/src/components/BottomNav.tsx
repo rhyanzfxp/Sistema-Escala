@@ -21,7 +21,8 @@ export default function BottomNav() {
   return (
     <nav style={{
       flexShrink: 0,
-      height: '62px',
+      height: 'calc(60px + env(safe-area-inset-bottom, 0px))',
+      paddingBottom: 'env(safe-area-inset-bottom, 0px)',
       background: 'rgba(36, 48, 32, 0.97)',
       backdropFilter: 'blur(14px)',
       borderTop: '1px solid var(--border-color)',

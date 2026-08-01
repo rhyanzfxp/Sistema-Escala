@@ -192,22 +192,25 @@ export default function ScheduleView() {
           <div className="mobile-only" style={{ flexDirection: 'column', gap: '1rem' }}>
             {filteredSchedule.map((item) => (
               <div key={item.service_id} className="card" style={{ position: 'relative' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.75rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.6rem' }}>
                   <div>
                     <span className={`badge badge-${item.church.toLowerCase()}`}>{item.church}</span>
-                    <h3 style={{ fontSize: '1.05rem', fontWeight: 800, marginTop: '0.35rem' }}>{item.title}</h3>
+                    <h3 style={{ fontSize: '1.05rem', fontWeight: 800, marginTop: '0.25rem' }}>{item.title}</h3>
                     <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '0.3rem', marginTop: '0.15rem' }}>
                       <Calendar size={13} /> {formatDateBR(item.date)} • {item.day_time}
                     </div>
                   </div>
+                  <span style={{ fontSize: '0.7rem', color: 'var(--primary)', opacity: 0.8, fontWeight: 600, textAlign: 'right' }}>
+                    Toque no nome para trocar
+                  </span>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', marginTop: '0.5rem' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', marginTop: '0.4rem' }}>
                   <div
                     onClick={() => openSwap(item.service_id, 'keyboard_member', item.keyboard_member, item.title, item.church, item.date)}
                     style={{
                       background: 'rgba(10, 14, 23, 0.6)',
-                      padding: '0.6rem 0.75rem',
+                      padding: '0.55rem 0.7rem',
                       borderRadius: '8px',
                       border: '1px solid var(--border-color)',
                       cursor: 'pointer'
@@ -216,7 +219,7 @@ export default function ScheduleView() {
                     <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
                       <Music size={12} /> Teclado
                     </div>
-                    <div style={{ fontSize: '0.85rem', fontWeight: 700, marginTop: '0.1rem', color: item.keyboard_member ? '#fff' : 'var(--text-dark)' }}>
+                    <div style={{ fontSize: '0.85rem', fontWeight: 700, marginTop: '0.1rem', color: item.keyboard_member && item.keyboard_member !== '-' ? '#fff' : 'var(--text-dark)' }}>
                       {item.keyboard_member || '-'}
                     </div>
                   </div>
@@ -225,7 +228,7 @@ export default function ScheduleView() {
                     onClick={() => openSwap(item.service_id, 'guitar_member', item.guitar_member, item.title, item.church, item.date)}
                     style={{
                       background: 'rgba(10, 14, 23, 0.6)',
-                      padding: '0.6rem 0.75rem',
+                      padding: '0.55rem 0.7rem',
                       borderRadius: '8px',
                       border: '1px solid var(--border-color)',
                       cursor: 'pointer'
@@ -234,7 +237,7 @@ export default function ScheduleView() {
                     <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
                       <Volume2 size={12} /> Violão
                     </div>
-                    <div style={{ fontSize: '0.85rem', fontWeight: 700, marginTop: '0.1rem', color: item.guitar_member ? '#fff' : 'var(--text-dark)' }}>
+                    <div style={{ fontSize: '0.85rem', fontWeight: 700, marginTop: '0.1rem', color: item.guitar_member && item.guitar_member !== '-' ? '#fff' : 'var(--text-dark)' }}>
                       {item.guitar_member || '-'}
                     </div>
                   </div>
@@ -243,7 +246,7 @@ export default function ScheduleView() {
                     onClick={() => openSwap(item.service_id, 'bass_member', item.bass_member, item.title, item.church, item.date)}
                     style={{
                       background: 'rgba(10, 14, 23, 0.6)',
-                      padding: '0.6rem 0.75rem',
+                      padding: '0.55rem 0.7rem',
                       borderRadius: '8px',
                       border: '1px solid var(--border-color)',
                       cursor: 'pointer'
@@ -252,7 +255,7 @@ export default function ScheduleView() {
                     <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
                       <Radio size={12} /> Baixo
                     </div>
-                    <div style={{ fontSize: '0.85rem', fontWeight: 700, marginTop: '0.1rem', color: item.bass_member ? '#fff' : 'var(--text-dark)' }}>
+                    <div style={{ fontSize: '0.85rem', fontWeight: 700, marginTop: '0.1rem', color: item.bass_member && item.bass_member !== '-' ? '#fff' : 'var(--text-dark)' }}>
                       {item.bass_member || '-'}
                     </div>
                   </div>
@@ -261,7 +264,7 @@ export default function ScheduleView() {
                     onClick={() => openSwap(item.service_id, 'drums_member', item.drums_member, item.title, item.church, item.date)}
                     style={{
                       background: 'rgba(10, 14, 23, 0.6)',
-                      padding: '0.6rem 0.75rem',
+                      padding: '0.55rem 0.7rem',
                       borderRadius: '8px',
                       border: '1px solid var(--border-color)',
                       cursor: 'pointer'
@@ -270,7 +273,7 @@ export default function ScheduleView() {
                     <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
                       <Disc size={12} /> Bateria
                     </div>
-                    <div style={{ fontSize: '0.85rem', fontWeight: 700, marginTop: '0.1rem', color: item.drums_member ? '#fff' : 'var(--text-dark)' }}>
+                    <div style={{ fontSize: '0.85rem', fontWeight: 700, marginTop: '0.1rem', color: item.drums_member && item.drums_member !== '-' ? '#fff' : 'var(--text-dark)' }}>
                       {item.drums_member || '-'}
                     </div>
                   </div>
@@ -280,28 +283,20 @@ export default function ScheduleView() {
                   onClick={() => openSwap(item.service_id, 'vocal_members', item.vocal_members, item.title, item.church, item.date)}
                   style={{
                     background: 'rgba(10, 14, 23, 0.6)',
-                    padding: '0.65rem 0.75rem',
+                    padding: '0.55rem 0.7rem',
                     borderRadius: '8px',
                     border: '1px solid var(--border-color)',
-                    marginTop: '0.5rem',
+                    marginTop: '0.4rem',
                     cursor: 'pointer'
                   }}
                 >
                   <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
                     <Mic size={12} /> Ministro / Vocais
                   </div>
-                  <div style={{ fontSize: '0.85rem', fontWeight: 700, marginTop: '0.1rem', color: item.vocal_members ? '#fff' : 'var(--text-dark)' }}>
+                  <div style={{ fontSize: '0.85rem', fontWeight: 700, marginTop: '0.1rem', color: item.vocal_members && item.vocal_members !== '-' ? '#fff' : 'var(--text-dark)' }}>
                     {item.vocal_members || '-'}
                   </div>
                 </div>
-
-                <button
-                  onClick={() => openSwap(item.service_id, 'drums_member', item.drums_member, item.title, item.church, item.date)}
-                  className="btn btn-secondary"
-                  style={{ width: '100%', marginTop: '0.75rem', fontSize: '0.8rem', minHeight: '38px', padding: '0.4rem' }}
-                >
-                  <ArrowRightLeft size={14} /> Trocar Integrante por Imprevisto
-                </button>
               </div>
             ))}
           </div>
