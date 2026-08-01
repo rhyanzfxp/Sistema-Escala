@@ -45,47 +45,34 @@ export default function Navbar() {
 
   return (
     <header style={{ background: 'var(--bg-surface)', borderBottom: '1px solid var(--border-color)', position: 'sticky', top: 0, zIndex: 100, boxShadow: '0 4px 20px rgba(0,0,0,0.35)' }}>
-      <div className="container" style={{ display: 'flex', flexDirection: 'column', gap: '1rem', padding: '0.85rem 1rem' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-            <img
-              src="/logo.jpg"
-              alt="Logo Ministério de Louvor"
-              onClick={handleLogoClick}
-              style={{
-                width: '46px',
-                height: '46px',
-                borderRadius: '12px',
-                objectFit: 'cover',
-                border: `2px solid ${isAdmin ? 'rgba(99,102,241,0.6)' : 'rgba(212, 178, 140, 0.4)'}`,
-                boxShadow: '0 4px 14px rgba(0, 0, 0, 0.4)',
-                cursor: 'pointer',
-                userSelect: 'none',
-                transition: 'border-color 0.3s ease'
-              }}
-            />
-            <div>
-              <h1 style={{ fontSize: '1.15rem', fontWeight: 800, letterSpacing: '-0.4px', color: '#f8fafc' }}>
-                Escala - Ministério de Louvor
-              </h1>
-              <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>CCHABITAREI Itaperi &amp; Industrial</p>
-            </div>
+      <div className="container" style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: '0.75rem', padding: '0.6rem 1rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+          <img
+            src="/logo.jpg"
+            alt="Logo Ministério de Louvor"
+            onClick={handleLogoClick}
+            style={{
+              width: '38px',
+              height: '38px',
+              borderRadius: '10px',
+              objectFit: 'cover',
+              border: `2px solid ${isAdmin ? 'rgba(99,102,241,0.6)' : 'rgba(212, 178, 140, 0.4)'}`,
+              boxShadow: '0 2px 10px rgba(0, 0, 0, 0.4)',
+              cursor: 'pointer',
+              userSelect: 'none',
+              transition: 'border-color 0.3s ease'
+            }}
+          />
+          <div>
+            <h1 style={{ fontSize: '1.05rem', fontWeight: 800, letterSpacing: '-0.3px', color: '#f8fafc', lineHeight: 1.2 }}>
+              Escala - Ministério de Louvor
+            </h1>
+            <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>CCHABITAREI Itaperi &amp; Industrial</p>
           </div>
-
-          {isAdmin && (
-            <button
-              onClick={() => { setIsAdmin(false); showToast('Modo Voluntário ativado', 'success'); }}
-              className="btn btn-secondary"
-              style={{ padding: '0.5rem 0.85rem', fontSize: '0.8rem', height: '36px', borderColor: 'rgba(99,102,241,0.4)', color: '#818cf8', display: 'flex', alignItems: 'center', gap: '0.4rem' }}
-            >
-              <ShieldAlert size={15} />
-              <span>Sair Admin</span>
-            </button>
-          )}
         </div>
 
-        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: '0.75rem' }}>
-          <div style={{ display: 'flex', background: 'rgba(30, 42, 26, 0.8)', padding: '4px', borderRadius: '10px', border: '1px solid var(--border-color)' }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '0.6rem', marginLeft: 'auto' }}>
+          <div style={{ display: 'flex', background: 'rgba(30, 42, 26, 0.8)', padding: '3px', borderRadius: '10px', border: '1px solid var(--border-color)' }}>
             {['Todas', 'Itaperi', 'Industrial'].map((item) => (
               <button
                 key={item}
@@ -94,9 +81,9 @@ export default function Navbar() {
                   border: 'none',
                   background: church === item ? 'var(--primary)' : 'transparent',
                   color: church === item ? '#1e2a1a' : 'var(--text-muted)',
-                  padding: '0.4rem 0.85rem',
-                  borderRadius: '8px',
-                  fontSize: '0.85rem',
+                  padding: '0.3rem 0.7rem',
+                  borderRadius: '7px',
+                  fontSize: '0.8rem',
                   fontWeight: church === item ? 700 : 600,
                   cursor: 'pointer',
                   transition: 'all 0.2s ease'
@@ -107,19 +94,30 @@ export default function Navbar() {
             ))}
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <Calendar size={16} color="var(--text-muted)" />
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+            <Calendar size={15} color="var(--text-muted)" />
             <select
               value={month}
               onChange={(e) => setMonth(e.target.value)}
               className="form-select"
-              style={{ minHeight: '38px', padding: '0.4rem 0.75rem', fontSize: '0.85rem', width: 'auto' }}
+              style={{ minHeight: '34px', padding: '0.3rem 0.6rem', fontSize: '0.82rem', width: 'auto' }}
             >
               <option value="2026-07">Julho 2026</option>
               <option value="2026-08">Agosto 2026</option>
               <option value="2026-09">Setembro 2026</option>
             </select>
           </div>
+
+          {isAdmin && (
+            <button
+              onClick={() => { setIsAdmin(false); showToast('Modo Voluntário ativado', 'success'); }}
+              className="btn btn-secondary"
+              style={{ padding: '0.35rem 0.7rem', fontSize: '0.78rem', height: '34px', minHeight: '34px', borderColor: 'rgba(99,102,241,0.4)', color: '#818cf8', display: 'flex', alignItems: 'center', gap: '0.35rem' }}
+            >
+              <ShieldAlert size={14} />
+              <span>Sair Admin</span>
+            </button>
+          )}
         </div>
       </div>
 

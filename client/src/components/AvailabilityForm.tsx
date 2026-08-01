@@ -238,10 +238,10 @@ export default function AvailabilityForm() {
           </div>
 
           {/* Lado Direito: Seleção fluida de Cultos */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <label className="form-label" style={{ margin: 0, fontWeight: 700, color: 'var(--text-main)' }}>
-                4. Selecione os Cultos Disponíveis ({selectedServices.length}/{filteredServices.length})
+              <label className="form-label" style={{ margin: 0, fontWeight: 700, color: 'var(--text-main)', fontSize: '0.85rem' }}>
+                4. Cultos Disponíveis ({selectedServices.length}/{filteredServices.length})
               </label>
               <button
                 type="button"
@@ -250,7 +250,7 @@ export default function AvailabilityForm() {
                   background: 'none',
                   border: 'none',
                   color: 'var(--primary)',
-                  fontSize: '0.8rem',
+                  fontSize: '0.78rem',
                   fontWeight: 700,
                   cursor: 'pointer'
                 }}
@@ -259,7 +259,15 @@ export default function AvailabilityForm() {
               </button>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '0.55rem' }}>
+            {/* Scrollbox interna de cultos */}
+            <div style={{
+              maxHeight: '350px',
+              overflowY: 'auto',
+              paddingRight: '0.3rem',
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fill, minmax(210px, 1fr))',
+              gap: '0.45rem'
+            }}>
               {filteredServices.map((s) => {
                 const isSelected = selectedServices.includes(s.id);
                 const hasResponded = respondedServiceIds.includes(s.id);
@@ -271,32 +279,32 @@ export default function AvailabilityForm() {
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'space-between',
-                      padding: '0.85rem 1rem',
+                      padding: '0.5rem 0.75rem',
                       background: isSelected ? 'rgba(201, 168, 122, 0.15)' : 'rgba(30, 42, 26, 0.6)',
                       border: `1px solid ${isSelected ? 'var(--primary)' : 'var(--border-color)'}`,
-                      borderRadius: '12px',
+                      borderRadius: '10px',
                       cursor: 'pointer',
-                      transition: 'all 0.2s ease'
+                      transition: 'all 0.15s ease'
                     }}
                   >
-                    <div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.2rem', flexWrap: 'wrap' }}>
-                        <span className={`badge badge-${s.church.toLowerCase()}`}>{s.church}</span>
-                        <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 600 }}>{formatDateBR(s.date)}</span>
+                    <div style={{ minWidth: 0, flex: 1, paddingRight: '0.4rem' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', marginBottom: '0.1rem', flexWrap: 'wrap' }}>
+                        <span className={`badge badge-${s.church.toLowerCase()}`} style={{ fontSize: '0.65rem', padding: '0.1rem 0.4rem' }}>{s.church}</span>
+                        <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 600 }}>{formatDateBR(s.date)}</span>
                         {hasResponded && (
-                          <span style={{ fontSize: '0.7rem', background: 'rgba(34,197,94,0.15)', color: '#4ade80', padding: '0.15rem 0.45rem', borderRadius: '4px', border: '1px solid rgba(34,197,94,0.3)', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
-                            <Check size={12} /> Respondido
+                          <span style={{ fontSize: '0.65rem', background: 'rgba(34,197,94,0.15)', color: '#4ade80', padding: '0.05rem 0.35rem', borderRadius: '4px', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '0.2rem' }}>
+                            <Check size={10} /> Ok
                           </span>
                         )}
                       </div>
-                      <div style={{ fontWeight: 700, fontSize: '0.95rem' }}>{s.title}</div>
-                      <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{s.day_time}</div>
+                      <div style={{ fontWeight: 700, fontSize: '0.85rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.title}</div>
+                      <div style={{ fontSize: '0.73rem', color: 'var(--text-muted)' }}>{s.day_time}</div>
                     </div>
 
                     <div style={{
-                      width: '24px',
-                      height: '24px',
-                      borderRadius: '6px',
+                      width: '20px',
+                      height: '20px',
+                      borderRadius: '5px',
                       border: `2px solid ${isSelected ? 'var(--primary)' : 'var(--border-color)'}`,
                       background: isSelected ? 'var(--primary)' : 'transparent',
                       display: 'flex',
@@ -304,7 +312,7 @@ export default function AvailabilityForm() {
                       justifyContent: 'center',
                       flexShrink: 0
                     }}>
-                      {isSelected && <CheckCircle2 size={16} color="#1e2a1a" />}
+                      {isSelected && <CheckCircle2 size={14} color="#1e2a1a" />}
                     </div>
                   </div>
                 );
@@ -313,21 +321,21 @@ export default function AvailabilityForm() {
           </div>
         </div>
 
-        {/* Botão de Envio Destacado ao Fim do Formulário */}
-        <div style={{ marginTop: '1.75rem', paddingTop: '1rem', borderTop: '1px solid var(--border-color)' }}>
+        {/* Botão de Envio Destacado */}
+        <div style={{ marginTop: '1.25rem', paddingTop: '0.85rem', borderTop: '1px solid var(--border-color)' }}>
           <button
             type="submit"
             className="btn btn-primary"
             style={{
               width: '100%',
-              fontSize: '1rem',
+              fontSize: '0.95rem',
               fontWeight: 800,
-              padding: '0.85rem 1.5rem',
+              padding: '0.75rem 1.25rem',
               boxShadow: 'var(--shadow-glow)'
             }}
             disabled={submitting}
           >
-            <Send size={18} />
+            <Send size={16} />
             {submitting ? 'Salvando...' : `Confirmar Presença (${selectedServices.length} cultos selecionados)`}
           </button>
         </div>
