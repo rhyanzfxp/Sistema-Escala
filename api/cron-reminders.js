@@ -1,18 +1,20 @@
 const { createClient } = require('@supabase/supabase-js');
 const webpush = require('web-push');
 
-const vapidPublicKey = process.env.VAPID_PUBLIC_KEY || 'BKPms99uKMuhQ9UTvbfzX2-7sWbMuAfI3LDu-6oRnrnZKhUMY9KqFOWwZutR-CxGj9nf-SYWB7pXhd5R6crUu6M';
-const vapidPrivateKey = process.env.VAPID_PRIVATE_KEY || 'za8DRf-eePxAT6ZDjqztZxhvqSvUTUX4pIftIIA2SEk';
+const vapidPublicKey = process.env.VAPID_PUBLIC_KEY || process.env.VITE_VAPID_PUBLIC_KEY || '';
+const vapidPrivateKey = process.env.VAPID_PRIVATE_KEY || '';
 
-webpush.setVapidDetails(
-  'mailto:contato@louvorescala.com',
-  vapidPublicKey,
-  vapidPrivateKey
-);
+if (vapidPublicKey && vapidPrivateKey) {
+  webpush.setVapidDetails(
+    'mailto:contato@louvorescala.com',
+    vapidPublicKey,
+    vapidPrivateKey
+  );
+}
 
-const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || 'https://seu-projeto.supabase.co';
-const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...';
-const supabase = createClient(supabaseUrl, supabaseKey);
+const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || '';
+const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY || '';
+const supabase = createClient(supabaseUrl || 'https://xyz.supabase.co', supabaseKey || 'anon-key');
 
 function formatDateBR(dateStr) {
   if (!dateStr) return '';
