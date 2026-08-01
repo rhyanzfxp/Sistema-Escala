@@ -2,11 +2,17 @@ import React, { useRef } from 'react';
 import html2canvas from 'html2canvas';
 import { useApp } from '../context/AppContext';
 import { formatDateBR } from '../services/api';
-import { Download, X, Music } from 'lucide-react';
+import { ScheduleItem } from '../types/database';
+import { Download, X } from 'lucide-react';
 
-export default function ExportCard({ onClose, scheduleItems }) {
+interface ExportCardProps {
+  onClose: () => void;
+  scheduleItems: ScheduleItem[];
+}
+
+export default function ExportCard({ onClose, scheduleItems }: ExportCardProps) {
   const { church, month, showToast } = useApp();
-  const cardRef = useRef(null);
+  const cardRef = useRef<HTMLDivElement>(null);
 
   const handleDownloadImage = async () => {
     if (!cardRef.current) return;

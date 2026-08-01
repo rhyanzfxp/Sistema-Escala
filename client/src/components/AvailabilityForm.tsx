@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, FormEvent } from 'react';
 import { useApp } from '../context/AppContext';
 import { submitAvailability, formatDateBR } from '../services/api';
 import { CheckCircle2, User, Music, CalendarCheck, Send, Check } from 'lucide-react';
@@ -6,13 +6,13 @@ import { CheckCircle2, User, Music, CalendarCheck, Send, Check } from 'lucide-re
 export default function AvailabilityForm() {
   const { members, services, availabilityList, church, showToast, loadAllData } = useApp();
 
-  const [name, setName] = useState('');
-  const [role, setRole] = useState('Bateria');
-  const [selectedServices, setSelectedServices] = useState([]);
-  const [notes, setNotes] = useState('');
-  const [submitting, setSubmitting] = useState(false);
-  const [isCustomName, setIsCustomName] = useState(false);
-  const [filterRole, setFilterRole] = useState('Bateria');
+  const [name, setName] = useState<string>('');
+  const [role, setRole] = useState<string>('Bateria');
+  const [selectedServices, setSelectedServices] = useState<number[]>([]);
+  const [notes, setNotes] = useState<string>('');
+  const [submitting, setSubmitting] = useState<boolean>(false);
+  const [isCustomName, setIsCustomName] = useState<boolean>(false);
+  const [filterRole, setFilterRole] = useState<string>('Bateria');
 
   const filteredServices = services.filter((s) => church === 'Todas' || s.church === church);
 
@@ -29,7 +29,7 @@ export default function AvailabilityForm() {
     })
     .sort((a, b) => a.name.localeCompare(b.name));
 
-  const toggleService = (id) => {
+  const toggleService = (id: number) => {
     if (selectedServices.includes(id)) {
       setSelectedServices(selectedServices.filter((sId) => sId !== id));
     } else {
@@ -45,7 +45,7 @@ export default function AvailabilityForm() {
     }
   };
 
-  const handleMemberSelect = (selectedName) => {
+  const handleMemberSelect = (selectedName: string) => {
     setName(selectedName);
     const found = members.find((m) => m.name === selectedName);
     if (found && found.default_role) {
@@ -53,7 +53,7 @@ export default function AvailabilityForm() {
     }
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (!name.trim()) {
       showToast('Por favor, escolha ou digite o seu nome', 'danger');
@@ -167,29 +167,29 @@ export default function AvailabilityForm() {
                 </div>
 
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem', marginTop: '0.5rem' }}>
-                    {filteredMembers.map((m) => {
-                      const isSelected = name === m.name;
-                      return (
-                        <button
-                          key={m.id}
-                          type="button"
-                          onClick={() => handleMemberSelect(m.name)}
-                          style={{
-                            border: `1px solid ${isSelected ? 'var(--primary)' : 'var(--border-color)'}`,
-                            background: isSelected ? 'var(--primary)' : 'rgba(201, 168, 122, 0.08)',
-                            color: isSelected ? '#1e2a1a' : 'var(--text-main)',
-                            padding: '0.4rem 0.75rem',
-                            borderRadius: '8px',
-                            fontSize: '0.82rem',
-                            fontWeight: isSelected ? 700 : 600,
-                            cursor: 'pointer'
-                          }}
-                        >
-                          {m.name}
-                        </button>
-                      );
-                    })}
-                  </div>
+                  {filteredMembers.map((m) => {
+                    const isSelected = name === m.name;
+                    return (
+                      <button
+                        key={m.id}
+                        type="button"
+                        onClick={() => handleMemberSelect(m.name)}
+                        style={{
+                          border: `1px solid ${isSelected ? 'var(--primary)' : 'var(--border-color)'}`,
+                          background: isSelected ? 'var(--primary)' : 'rgba(201, 168, 122, 0.08)',
+                          color: isSelected ? '#1e2a1a' : 'var(--text-main)',
+                          padding: '0.4rem 0.75rem',
+                          borderRadius: '8px',
+                          fontSize: '0.82rem',
+                          fontWeight: isSelected ? 700 : 600,
+                          cursor: 'pointer'
+                        }}
+                      >
+                        {m.name}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
             </>
           ) : (

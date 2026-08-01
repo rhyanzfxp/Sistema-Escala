@@ -1,19 +1,30 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, FormEvent } from 'react';
 import { useApp } from '../context/AppContext';
 import { fetchAvailableSubstitutes, executeSwap } from '../services/api';
 import { ArrowRightLeft, UserCheck, AlertTriangle, Check, X } from 'lucide-react';
 
+interface AvailableSubstitute {
+  member_name: string;
+  role: string;
+  notes?: string;
+}
+
 export default function SwapModal() {
   const { swapModal, setSwapModal, showToast, loadAllData } = useApp();
-  const [availableList, setAvailableList] = useState([]);
-  const [selectedSubstitute, setSelectedSubstitute] = useState('');
-  const [customName, setCustomName] = useState('');
-  const [loadingSubs, setLoadingSubs] = useState(true);
-  const [swapping, setSwapping] = useState(false);
+  const [availableList, setAvailableList] = useState<AvailableSubstitute[]>([]);
+  const [selectedSubstitute, setSelectedSubstitute] = useState<string>('');
+  const [customName, setCustomName] = useState<string>('');
+  const [loadingSubs, setLoadingSubs] = useState<boolean>(true);
+  const [swapping, setSwapping] = useState<boolean>(false);
 
-  const { serviceId, roleField, currentMember, serviceTitle, churchName, dateStr } = swapModal;
+  const item = swapModal.item;
+  const serviceId = item?.serviceId;
+  const roleField = item?.roleField;
+  const currentMember = item?.currentMember || '';
+  const serviceTitle = item?.title || '';
+  const dateStr = item?.date || '';
 
-  const roleLabelMap = {
+  const roleLabelMap: Record<string, string> = {
     keyboard_member: 'Teclado / Sanfona',
     guitar_member: 'Violão / Guitarra',
     bass_member: 'Baixista',
@@ -21,14 +32,14 @@ export default function SwapModal() {
     vocal_members: 'Ministro / Vocais'
   };
 
-  const roleName = roleLabelMap[roleField] || 'Função';
+  const roleName = roleField ? (roleLabelMap[roleField] || 'Função') : 'Função';
 
   useEffect(() => {
     if (swapModal.open && serviceId) {
       setLoadingSubs(true);
       fetchAvailableSubstitutes(serviceId, roleName)
         .then((res) => {
-          const filtered = res.filter((item) => item.member_name !== currentMember);
+          const filtered = res.filter((sub) => sub.member_name !== currentMember);
           setAvailableList(filtered);
           if (filtered.length > 0) {
             setSelectedSubstitute(filtered[0].member_name);
@@ -37,11 +48,11 @@ export default function SwapModal() {
         .catch(() => setAvailableList([]))
         .finally(() => setLoadingSubs(false));
     }
-  }, [swapModal, serviceId, roleName, currentMember]);
+  }, [swapModal.open, serviceId, roleName, currentMember]);
 
-  if (!swapModal.open) return null;
+  if (!swapModal.open || !item || !serviceId || !roleField) return null;
 
-  const handleConfirmSwap = async (e) => {
+  const handleConfirmSwap = async (e: FormEvent) => {
     e.preventDefault();
     const finalNewMember = customName.trim() ? customName.toUpperCase().trim() : selectedSubstitute;
 
@@ -60,7 +71,7 @@ export default function SwapModal() {
       });
 
       showToast(`Troca realizada com sucesso! ${currentMember} ➔ ${finalNewMember}`, 'success');
-      setSwapModal({ open: false });
+      setSwapModal({ open: false, item: null });
       await loadAllData();
     } catch (err) {
       showToast('Erro ao realizar a troca', 'danger');
@@ -70,14 +81,14 @@ export default function SwapModal() {
   };
 
   return (
-    <div className="modal-overlay" onClick={() => setSwapModal({ open: false })}>
+    <div className="modal-overlay" onClick={() => setSwapModal({ open: false, item: null })}>
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
           <h3 style={{ fontSize: '1.2rem', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <ArrowRightLeft color="var(--primary)" size={22} /> Troca Direta por Imprevisto
           </h3>
           <button
-            onClick={() => setSwapModal({ open: false })}
+            onClick={() => setSwapModal({ open: false, item: null })}
             style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
           >
             <X size={20} />
@@ -86,7 +97,6 @@ export default function SwapModal() {
 
         <div style={{ background: 'rgba(10, 14, 23, 0.7)', padding: '0.85rem 1rem', borderRadius: '12px', marginBottom: '1.25rem', border: '1px solid var(--border-color)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
-            <span className={`badge badge-${churchName?.toLowerCase()}`}>{churchName}</span>
             <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{dateStr}</span>
           </div>
           <div style={{ fontWeight: 700, fontSize: '0.95rem' }}>{serviceTitle}</div>
@@ -164,7 +174,7 @@ export default function SwapModal() {
               type="button"
               className="btn btn-secondary"
               style={{ flex: 1 }}
-              onClick={() => setSwapModal({ open: false })}
+              onClick={() => setSwapModal({ open: false, item: null })}
             >
               Cancelar
             </button>

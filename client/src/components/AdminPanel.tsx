@@ -1,24 +1,22 @@
-import React, { useState } from 'react';
+import React, { useState, FormEvent } from 'react';
 import { useApp } from '../context/AppContext';
 import { updateServiceSchedule, addMember, clearAllSchedules, clearAllAvailability, togglePublishSchedule, formatDateBR } from '../services/api';
-import { Shield, Save, UserPlus, Users, Trash2, Send, X, Check, Music, Disc, Mic, Volume2, Calendar, Radio, AlertTriangle, ChevronDown } from 'lucide-react';
+import { Member, Service, Availability } from '../types/database';
+import { Shield, Save, UserPlus, Users, Trash2, Send, X, Check, Music, Disc, Mic, Volume2, Calendar, Radio, AlertTriangle } from 'lucide-react';
 
-const ROLE_MAP = {
-  keyboard_member: 'Teclado',
-  guitar_member:   'Violão',
-  bass_member:     'Baixo',
-  drums_member:    'Bateria',
-};
+interface EditFormState {
+  keyboard_member: string;
+  guitar_member: string;
+  bass_member: string;
+  drums_member: string;
+  vocal_members: string;
+}
 
-function filterByRole(members, role) {
+function filterByRole(members: Member[], role: string): Member[] {
   return members.filter((m) => (m.default_role || '').toLowerCase() === role.toLowerCase());
 }
 
-function isAvailable(avails, memberName) {
-  return avails.some((a) => (a.member_name || '').toLowerCase() === memberName.toLowerCase());
-}
-
-function isAvailableForRole(avails, memberName, role) {
+function isAvailableForRole(avails: Availability[], memberName: string, role: string): boolean {
   return avails.some(
     (a) =>
       (a.member_name || '').toLowerCase() === memberName.toLowerCase() &&
@@ -29,8 +27,8 @@ function isAvailableForRole(avails, memberName, role) {
 export default function AdminPanel() {
   const { services, scheduleData, availabilityList, members, church, month, showToast, loadAllData } = useApp();
 
-  const [activeModalService, setActiveModalService] = useState(null);
-  const [editForm, setEditForm] = useState({
+  const [activeModalService, setActiveModalService] = useState<Service | null>(null);
+  const [editForm, setEditForm] = useState<EditFormState>({
     keyboard_member: '',
     guitar_member: '',
     bass_member: '',
@@ -38,19 +36,25 @@ export default function AdminPanel() {
     vocal_members: ''
   });
 
-  const [showMemberModal, setShowMemberModal] = useState(false);
-  const [showClearAvailModal, setShowClearAvailModal] = useState(false);
-  const [showClearSchedModal, setShowClearSchedModal] = useState(false);
-  const [showPublishModal, setShowPublishModal] = useState(false);
-  const [newMemberName, setNewMemberName] = useState('');
-  const [newMemberRole, setNewMemberRole] = useState('Vocal');
-  const [saving, setSaving] = useState(false);
+  const [showMemberModal, setShowMemberModal] = useState<boolean>(false);
+  const [showClearAvailModal, setShowClearAvailModal] = useState<boolean>(false);
+  const [showClearSchedModal, setShowClearSchedModal] = useState<boolean>(false);
+  const [showPublishModal, setShowPublishModal] = useState<boolean>(false);
+  const [newMemberName, setNewMemberName] = useState<string>('');
+  const [newMemberRole, setNewMemberRole] = useState<string>('Vocal');
+  const [saving, setSaving] = useState<boolean>(false);
 
   const filteredServices = services.filter((s) => church === 'Todas' || s.church === church);
   const isPublished = scheduleData.length > 0 && scheduleData.some((s) => s.published === 1);
 
-  const openEditModal = (service) => {
-    const currentSched = scheduleData.find((s) => s.service_id === service.id) || {};
+  const openEditModal = (service: Service) => {
+    const currentSched = scheduleData.find((s) => s.service_id === service.id) || {
+      keyboard_member: '-',
+      guitar_member: '-',
+      bass_member: '-',
+      drums_member: '-',
+      vocal_members: '-'
+    };
     setActiveModalService(service);
     setEditForm({
       keyboard_member: currentSched.keyboard_member || '-',
@@ -61,7 +65,7 @@ export default function AdminPanel() {
     });
   };
 
-  const handleSaveSchedule = async (e) => {
+  const handleSaveSchedule = async (e: FormEvent) => {
     e.preventDefault();
     if (!activeModalService) return;
     setSaving(true);
@@ -80,7 +84,7 @@ export default function AdminPanel() {
     }
   };
 
-  const handleAddMember = async (e) => {
+  const handleAddMember = async (e: FormEvent) => {
     e.preventDefault();
     if (!newMemberName.trim()) return;
     try {
@@ -97,7 +101,6 @@ export default function AdminPanel() {
   const handleClearAll = async () => {
     setShowClearSchedModal(false);
     try {
-      // Limpa cloud store + todos os caches locais de escala
       await clearAllSchedules();
       Object.keys(localStorage)
         .filter((k) => k.startsWith('le_schedule') || k === 'le_cloud_store')
@@ -112,7 +115,6 @@ export default function AdminPanel() {
   const handleClearAvailability = async () => {
     setShowClearAvailModal(false);
     try {
-      // Limpa cloud store + todos os caches locais de disponibilidade
       await clearAllAvailability();
       Object.keys(localStorage)
         .filter((k) => k.startsWith('le_avail') || k === 'le_cloud_store')
@@ -214,7 +216,13 @@ export default function AdminPanel() {
         <h3 style={{ fontSize: '1.15rem', fontWeight: 800 }}>Cultos e Escalamento</h3>
 
         {filteredServices.map((service) => {
-          const currentSched = scheduleData.find((s) => s.service_id === service.id) || {};
+          const currentSched = scheduleData.find((s) => s.service_id === service.id) || {
+            keyboard_member: '-',
+            guitar_member: '-',
+            bass_member: '-',
+            drums_member: '-',
+            vocal_members: '-'
+          };
           const serviceAvails = availabilityList.filter((a) => a.service_id === service.id);
 
           return (
@@ -307,8 +315,12 @@ export default function AdminPanel() {
             {(() => {
               const serviceAvails = availabilityList.filter((a) => a.service_id === activeModalService.id);
 
-              // Selects filtrados por instrumento
-              const roleFields = [
+              const roleFields: Array<{
+                key: keyof Omit<EditFormState, 'vocal_members'>;
+                label: string;
+                role: string;
+                icon: React.ReactNode;
+              }> = [
                 { key: 'keyboard_member', label: 'Teclado',         role: 'Teclado',  icon: <Music   size={15} color="var(--primary)" /> },
                 { key: 'guitar_member',   label: 'Violão / Guitarra', role: 'Violão',  icon: <Volume2 size={15} color="var(--primary)" /> },
                 { key: 'bass_member',     label: 'Baixo',            role: 'Baixo',    icon: <Radio   size={15} color="var(--primary)" /> },
@@ -320,7 +332,6 @@ export default function AdminPanel() {
 
               return (
                 <form onSubmit={handleSaveSchedule} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-                  {/* Voluntários disponíveis agrupados por instrumento */}
                   <div style={{ background: 'rgba(10, 14, 23, 0.6)', padding: '0.75rem 1rem', borderRadius: '10px', border: '1px solid var(--border-color)' }}>
                     <div style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary)', marginBottom: '0.6rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                       <Users size={15} /> Voluntários Disponíveis — toque para alocar automaticamente:
@@ -375,7 +386,6 @@ export default function AdminPanel() {
                     )}
                   </div>
 
-                  {/* Selects filtrados por instrumento */}
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.85rem' }}>
                     {roleFields.map(({ key, label, role, icon }) => {
                       const filtered = filterByRole(members, role);
@@ -391,13 +401,11 @@ export default function AdminPanel() {
                           >
                             <option value="-">- Ninguém</option>
                             <option value="CONVIDADO">CONVIDADO</option>
-                            {/* Disponíveis primeiro */}
                             {filtered.filter((m) => isAvailableForRole(serviceAvails, m.name, role)).map((m) => (
                               <option key={`avail-${m.id}`} value={m.name}>
                                 {m.name} (Disponível)
                               </option>
                             ))}
-                            {/* Demais do mesmo instrumento */}
                             {filtered.filter((m) => !isAvailableForRole(serviceAvails, m.name, role)).map((m) => (
                               <option key={m.id} value={m.name}>
                                 {m.name}
@@ -409,7 +417,6 @@ export default function AdminPanel() {
                     })}
                   </div>
 
-                  {/* Vocais: select múltiplo filtrado por Vocal */}
                   <div>
                     <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                       <Mic size={15} color="var(--primary)" /> Ministro / Vocais

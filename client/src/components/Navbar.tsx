@@ -1,19 +1,19 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, FormEvent } from 'react';
 import { useApp } from '../context/AppContext';
 import { Shield, ShieldAlert, Calendar } from 'lucide-react';
 
 export default function Navbar() {
   const { church, setChurch, month, setMonth, isAdmin, setIsAdmin, showToast } = useApp();
-  const [pinInput, setPinInput] = useState('');
-  const [showPinModal, setShowPinModal] = useState(false);
+  const [pinInput, setPinInput] = useState<string>('');
+  const [showPinModal, setShowPinModal] = useState<boolean>(false);
 
   // Clique secreto no logo para abrir o painel admin
-  const clickCount = useRef(0);
-  const clickTimer = useRef(null);
+  const clickCount = useRef<number>(0);
+  const clickTimer = useRef<NodeJS.Timeout | number | null>(null);
 
   const handleLogoClick = () => {
     clickCount.current += 1;
-    clearTimeout(clickTimer.current);
+    if (clickTimer.current) clearTimeout(clickTimer.current as number);
 
     if (clickCount.current >= 5) {
       clickCount.current = 0;
@@ -24,14 +24,13 @@ export default function Navbar() {
         setShowPinModal(true);
       }
     } else {
-      // Reseta o contador se não clicar 5x em 2 segundos
       clickTimer.current = setTimeout(() => {
         clickCount.current = 0;
       }, 2000);
     }
   };
 
-  const verifyPin = (e) => {
+  const verifyPin = (e: FormEvent) => {
     e.preventDefault();
     if (pinInput === '1234' || pinInput === 'admin') {
       setIsAdmin(true);
@@ -49,7 +48,6 @@ export default function Navbar() {
       <div className="container" style={{ display: 'flex', flexDirection: 'column', gap: '1rem', padding: '0.85rem 1rem' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-            {/* Logo clicável secretamente 5x para acessar admin */}
             <img
               src="/logo.jpg"
               alt="Logo Ministério de Louvor"
@@ -74,7 +72,6 @@ export default function Navbar() {
             </div>
           </div>
 
-          {/* Botão "Sair Admin" só aparece quando já está em modo admin */}
           {isAdmin && (
             <button
               onClick={() => { setIsAdmin(false); showToast('Modo Voluntário ativado', 'success'); }}

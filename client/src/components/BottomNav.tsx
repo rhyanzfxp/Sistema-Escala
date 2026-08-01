@@ -1,11 +1,18 @@
 import React from 'react';
 import { useApp } from '../context/AppContext';
-import { CalendarDays, CheckSquare, Settings } from 'lucide-react';
+import { CalendarDays, CheckSquare, Settings, LucideIcon } from 'lucide-react';
+
+interface TabItem {
+  id: 'schedule' | 'availability' | 'admin';
+  label: string;
+  icon: LucideIcon;
+  adminOnly?: boolean;
+}
 
 export default function BottomNav() {
   const { activeTab, setActiveTab, isAdmin } = useApp();
 
-  const tabs = [
+  const tabs: TabItem[] = [
     { id: 'schedule', label: 'Escala Oficial', icon: CalendarDays },
     { id: 'availability', label: 'Marcar Presença', icon: CheckSquare },
     { id: 'admin', label: 'Painel Líder', icon: Settings, adminOnly: true }

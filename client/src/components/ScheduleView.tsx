@@ -1,26 +1,35 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { formatDateBR } from '../services/api';
-import { RefreshCw, Share2, ArrowRightLeft, Music, Volume2, Radio, Disc, Mic, Calendar, AlertCircle, CalendarCheck, Clock, CheckCircle } from 'lucide-react';
+import { RefreshCw, Share2, ArrowRightLeft, Music, Volume2, Radio, Disc, Mic, Calendar, AlertCircle, CalendarCheck, Clock } from 'lucide-react';
 import ExportCard from './ExportCard';
 
 export default function ScheduleView() {
   const { scheduleData, church, setSwapModal, isAdmin, loading, loadAllData, setActiveTab } = useApp();
-  const [showExportModal, setShowExportModal] = useState(false);
+  const [showExportModal, setShowExportModal] = useState<boolean>(false);
 
   const filteredSchedule = scheduleData.filter((item) => church === 'Todas' || item.church === church);
   const isPublished = filteredSchedule.length > 0 && filteredSchedule.some((item) => item.published === 1);
 
-  const openSwap = (serviceId, roleField, currentMember, serviceTitle, churchName, dateStr) => {
+  const openSwap = (
+    serviceId: number,
+    roleField: 'keyboard_member' | 'guitar_member' | 'bass_member' | 'drums_member' | 'vocal_members',
+    currentMember: string,
+    serviceTitle: string,
+    churchName: string,
+    dateStr: string
+  ) => {
     if (!currentMember || currentMember === '-' || currentMember === 'CONVIDADO') return;
     setSwapModal({
       open: true,
-      serviceId,
-      roleField,
-      currentMember,
-      serviceTitle,
-      churchName,
-      dateStr: formatDateBR(dateStr)
+      item: {
+        serviceId,
+        roleField,
+        roleName: roleField,
+        currentMember,
+        title: serviceTitle,
+        date: formatDateBR(dateStr)
+      }
     });
   };
 
