@@ -84,225 +84,253 @@ export default function AvailabilityForm() {
   };
 
   return (
-    <div className="card" style={{ maxWidth: '650px', margin: '0 auto' }}>
+    <div className="card" style={{ maxWidth: '1000px', margin: '0 auto', width: '100%' }}>
       <div style={{ marginBottom: '1.25rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.85rem' }}>
         <h2 style={{ fontSize: '1.3rem', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
           <CalendarCheck color="var(--primary)" size={22} /> Registrar Disponibilidade
         </h2>
-        <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>
+        <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>
           Escolha seu nome e selecione os cultos em que estará livre para servir.
         </p>
       </div>
 
       <form onSubmit={handleSubmit}>
-        <div className="form-group">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.35rem' }}>
-            <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', margin: 0 }}>
-              <User size={16} /> Seu Nome na Equipe
-            </label>
-            <button
-              type="button"
-              onClick={() => {
-                setIsCustomName(!isCustomName);
-                setName('');
-              }}
-              style={{
-                background: 'none',
-                border: 'none',
-                color: 'var(--primary)',
-                fontSize: '0.75rem',
-                fontWeight: 600,
-                cursor: 'pointer'
-              }}
-            >
-              {isCustomName ? 'Escolher da lista' : '+ Convidado?'}
-            </button>
-          </div>
-
-          {!isCustomName ? (
-            <>
-              <select
-                className="form-select"
-                value={name}
-                onChange={(e) => handleMemberSelect(e.target.value)}
-                required
-                style={{ fontSize: '0.95rem', fontWeight: 600 }}
-              >
-                <option value="">-- Selecione seu nome --</option>
-                {members
-                  .sort((a, b) => a.name.localeCompare(b.name))
-                  .map((m) => (
-                    <option key={m.id} value={m.name}>
-                      {m.name} ({m.default_role || 'Integrante'})
-                    </option>
-                  ))}
-              </select>
-
-              <div style={{ marginTop: '0.85rem' }}>
-                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.4rem', fontWeight: 600 }}>
-                  Ou filtre por instrumento:
-                </div>
-                <div style={{ display: 'flex', gap: '0.35rem', overflowX: 'auto', paddingBottom: '0.35rem' }}>
-                  {roleCategories.map((cat) => (
-                    <button
-                      key={cat}
-                      type="button"
-                      onClick={() => setFilterRole(cat)}
-                      style={{
-                        border: `1px solid ${filterRole === cat ? 'var(--primary)' : 'var(--border-color)'}`,
-                        background: filterRole === cat ? 'var(--primary)' : 'rgba(30, 42, 26, 0.6)',
-                        color: filterRole === cat ? '#1e2a1a' : 'var(--text-muted)',
-                        padding: '0.3rem 0.65rem',
-                        borderRadius: '20px',
-                        fontSize: '0.75rem',
-                        fontWeight: filterRole === cat ? 700 : 500,
-                        whiteSpace: 'nowrap',
-                        cursor: 'pointer',
-                        transition: 'all 0.15s ease'
-                      }}
-                    >
-                      {cat}
-                    </button>
-                  ))}
-                </div>
-
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem', marginTop: '0.5rem' }}>
-                  {filteredMembers.map((m) => {
-                    const isSelected = name === m.name;
-                    return (
-                      <button
-                        key={m.id}
-                        type="button"
-                        onClick={() => handleMemberSelect(m.name)}
-                        style={{
-                          border: `1px solid ${isSelected ? 'var(--primary)' : 'var(--border-color)'}`,
-                          background: isSelected ? 'var(--primary)' : 'rgba(201, 168, 122, 0.08)',
-                          color: isSelected ? '#1e2a1a' : 'var(--text-main)',
-                          padding: '0.4rem 0.75rem',
-                          borderRadius: '8px',
-                          fontSize: '0.82rem',
-                          fontWeight: isSelected ? 700 : 600,
-                          cursor: 'pointer'
-                        }}
-                      >
-                        {m.name}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            </>
-          ) : (
-            <input
-              type="text"
-              className="form-input"
-              placeholder="Digite seu nome completo..."
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
-            />
-          )}
-        </div>
-
-        <div className="form-group" style={{ marginTop: '1rem' }}>
-          <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-            <Music size={16} /> Sua Função / Instrumento
-          </label>
-          <select className="form-select" value={role} onChange={(e) => setRole(e.target.value)}>
-            <option value="Teclado">Teclado / Sanfona</option>
-            <option value="Violão">Violão / Guitarra</option>
-            <option value="Baixo">Baixista</option>
-            <option value="Bateria">Baterista / Cajón</option>
-            <option value="Vocal">Ministro / Vocal</option>
-          </select>
-        </div>
-
-        <div style={{ marginTop: '1.25rem', marginBottom: '1.25rem' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
-            <label className="form-label">Selecione os Cultos Disponíveis</label>
-            <button
-              type="button"
-              onClick={selectAll}
-              style={{
-                background: 'none',
-                border: 'none',
-                color: 'var(--primary)',
-                fontSize: '0.8rem',
-                fontWeight: 600,
-                cursor: 'pointer'
-              }}
-            >
-              {selectedServices.length === filteredServices.length ? 'Desmarcar Todos' : 'Marcar Todos'}
-            </button>
-          </div>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem', maxHeight: '320px', overflowY: 'auto' }}>
-            {filteredServices.map((s) => {
-              const isSelected = selectedServices.includes(s.id);
-              const hasResponded = respondedServiceIds.includes(s.id);
-              return (
-                <div
-                  key={s.id}
-                  onClick={() => toggleService(s.id)}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+          gap: '1.5rem',
+          alignItems: 'start'
+        }}>
+          {/* Lado Esquerdo: Identificação do Integrante & Instrumento */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
+            <div className="form-group" style={{ margin: 0 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
+                <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', margin: 0 }}>
+                  <User size={16} /> 1. Seu Nome na Equipe
+                </label>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsCustomName(!isCustomName);
+                    setName('');
+                  }}
                   style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    padding: '0.85rem 1rem',
-                    background: isSelected ? 'rgba(201, 168, 122, 0.15)' : 'rgba(30, 42, 26, 0.6)',
-                    border: `1px solid ${isSelected ? 'var(--primary)' : 'var(--border-color)'}`,
-                    borderRadius: '12px',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s ease'
+                    background: 'none',
+                    border: 'none',
+                    color: 'var(--primary)',
+                    fontSize: '0.75rem',
+                    fontWeight: 600,
+                    cursor: 'pointer'
                   }}
                 >
-                  <div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.2rem', flexWrap: 'wrap' }}>
-                      <span className={`badge badge-${s.church.toLowerCase()}`}>{s.church}</span>
-                      <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 600 }}>{formatDateBR(s.date)}</span>
-                      {hasResponded && (
-                        <span style={{ fontSize: '0.7rem', background: 'rgba(34,197,94,0.15)', color: '#4ade80', padding: '0.15rem 0.45rem', borderRadius: '4px', border: '1px solid rgba(34,197,94,0.3)', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
-                          <Check size={12} /> Respondido
-                        </span>
-                      )}
-                    </div>
-                    <div style={{ fontWeight: 700, fontSize: '0.95rem' }}>{s.title}</div>
-                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{s.day_time}</div>
-                  </div>
+                  {isCustomName ? 'Escolher da lista' : '+ Convidado?'}
+                </button>
+              </div>
 
-                  <div style={{
-                    width: '24px',
-                    height: '24px',
-                    borderRadius: '6px',
-                    border: `2px solid ${isSelected ? 'var(--primary)' : 'var(--border-color)'}`,
-                    background: isSelected ? 'var(--primary)' : 'transparent',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center'
-                  }}>
-                    {isSelected && <CheckCircle2 size={16} color="#1e2a1a" />}
+              {!isCustomName ? (
+                <>
+                  <select
+                    className="form-select"
+                    value={name}
+                    onChange={(e) => handleMemberSelect(e.target.value)}
+                    required
+                    style={{ fontSize: '0.95rem', fontWeight: 600 }}
+                  >
+                    <option value="">-- Selecione seu nome --</option>
+                    {members
+                      .sort((a, b) => a.name.localeCompare(b.name))
+                      .map((m) => (
+                        <option key={m.id} value={m.name}>
+                          {m.name} ({m.default_role || 'Integrante'})
+                        </option>
+                      ))}
+                  </select>
+
+                  <div style={{ marginTop: '0.85rem' }}>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.4rem', fontWeight: 600 }}>
+                      Ou clique rápido pelo seu instrumento:
+                    </div>
+                    <div style={{ display: 'flex', gap: '0.35rem', overflowX: 'auto', paddingBottom: '0.35rem' }}>
+                      {roleCategories.map((cat) => (
+                        <button
+                          key={cat}
+                          type="button"
+                          onClick={() => setFilterRole(cat)}
+                          style={{
+                            border: `1px solid ${filterRole === cat ? 'var(--primary)' : 'var(--border-color)'}`,
+                            background: filterRole === cat ? 'var(--primary)' : 'rgba(30, 42, 26, 0.6)',
+                            color: filterRole === cat ? '#1e2a1a' : 'var(--text-muted)',
+                            padding: '0.3rem 0.65rem',
+                            borderRadius: '20px',
+                            fontSize: '0.75rem',
+                            fontWeight: filterRole === cat ? 700 : 500,
+                            whiteSpace: 'nowrap',
+                            cursor: 'pointer',
+                            transition: 'all 0.15s ease'
+                          }}
+                        >
+                          {cat}
+                        </button>
+                      ))}
+                    </div>
+
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem', marginTop: '0.5rem' }}>
+                      {filteredMembers.map((m) => {
+                        const isSelected = name === m.name;
+                        return (
+                          <button
+                            key={m.id}
+                            type="button"
+                            onClick={() => handleMemberSelect(m.name)}
+                            style={{
+                              border: `1px solid ${isSelected ? 'var(--primary)' : 'var(--border-color)'}`,
+                              background: isSelected ? 'var(--primary)' : 'rgba(201, 168, 122, 0.08)',
+                              color: isSelected ? '#1e2a1a' : 'var(--text-main)',
+                              padding: '0.4rem 0.75rem',
+                              borderRadius: '8px',
+                              fontSize: '0.82rem',
+                              fontWeight: isSelected ? 700 : 600,
+                              cursor: 'pointer'
+                            }}
+                          >
+                            {m.name}
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
-                </div>
-              );
-            })}
+                </>
+              ) : (
+                <input
+                  type="text"
+                  className="form-input"
+                  placeholder="Digite seu nome completo..."
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  required
+                />
+              )}
+            </div>
+
+            <div className="form-group" style={{ margin: 0 }}>
+              <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                <Music size={16} /> 2. Sua Função / Instrumento Neste Mês
+              </label>
+              <select className="form-select" value={role} onChange={(e) => setRole(e.target.value)}>
+                <option value="Teclado">Teclado / Sanfona</option>
+                <option value="Violão">Violão / Guitarra</option>
+                <option value="Baixo">Baixista</option>
+                <option value="Bateria">Baterista / Cajón</option>
+                <option value="Vocal">Ministro / Vocal</option>
+              </select>
+            </div>
+
+            <div className="form-group" style={{ margin: 0 }}>
+              <label className="form-label">3. Observações ou Restrições (Opcional)</label>
+              <input
+                type="text"
+                className="form-input"
+                placeholder="Ex: Disponível apenas no culto da noite..."
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+              />
+            </div>
+          </div>
+
+          {/* Lado Direito: Seleção fluida de Cultos */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <label className="form-label" style={{ margin: 0, fontWeight: 700, color: 'var(--text-main)' }}>
+                4. Selecione os Cultos Disponíveis ({selectedServices.length}/{filteredServices.length})
+              </label>
+              <button
+                type="button"
+                onClick={selectAll}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: 'var(--primary)',
+                  fontSize: '0.8rem',
+                  fontWeight: 700,
+                  cursor: 'pointer'
+                }}
+              >
+                {selectedServices.length === filteredServices.length ? 'Desmarcar Todos' : 'Marcar Todos'}
+              </button>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '0.55rem' }}>
+              {filteredServices.map((s) => {
+                const isSelected = selectedServices.includes(s.id);
+                const hasResponded = respondedServiceIds.includes(s.id);
+                return (
+                  <div
+                    key={s.id}
+                    onClick={() => toggleService(s.id)}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      padding: '0.85rem 1rem',
+                      background: isSelected ? 'rgba(201, 168, 122, 0.15)' : 'rgba(30, 42, 26, 0.6)',
+                      border: `1px solid ${isSelected ? 'var(--primary)' : 'var(--border-color)'}`,
+                      borderRadius: '12px',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease'
+                    }}
+                  >
+                    <div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.2rem', flexWrap: 'wrap' }}>
+                        <span className={`badge badge-${s.church.toLowerCase()}`}>{s.church}</span>
+                        <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 600 }}>{formatDateBR(s.date)}</span>
+                        {hasResponded && (
+                          <span style={{ fontSize: '0.7rem', background: 'rgba(34,197,94,0.15)', color: '#4ade80', padding: '0.15rem 0.45rem', borderRadius: '4px', border: '1px solid rgba(34,197,94,0.3)', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+                            <Check size={12} /> Respondido
+                          </span>
+                        )}
+                      </div>
+                      <div style={{ fontWeight: 700, fontSize: '0.95rem' }}>{s.title}</div>
+                      <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{s.day_time}</div>
+                    </div>
+
+                    <div style={{
+                      width: '24px',
+                      height: '24px',
+                      borderRadius: '6px',
+                      border: `2px solid ${isSelected ? 'var(--primary)' : 'var(--border-color)'}`,
+                      background: isSelected ? 'var(--primary)' : 'transparent',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      flexShrink: 0
+                    }}>
+                      {isSelected && <CheckCircle2 size={16} color="#1e2a1a" />}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </div>
 
-        <div className="form-group">
-          <label className="form-label">Observações ou Restrições (Opcional)</label>
-          <input
-            type="text"
-            className="form-input"
-            placeholder="Ex: Disponível apenas no culto da noite..."
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-          />
+        {/* Botão de Envio Destacado ao Fim do Formulário */}
+        <div style={{ marginTop: '1.75rem', paddingTop: '1rem', borderTop: '1px solid var(--border-color)' }}>
+          <button
+            type="submit"
+            className="btn btn-primary"
+            style={{
+              width: '100%',
+              fontSize: '1rem',
+              fontWeight: 800,
+              padding: '0.85rem 1.5rem',
+              boxShadow: 'var(--shadow-glow)'
+            }}
+            disabled={submitting}
+          >
+            <Send size={18} />
+            {submitting ? 'Salvando...' : `Confirmar Presença (${selectedServices.length} cultos selecionados)`}
+          </button>
         </div>
-
-        <button type="submit" className="btn btn-primary" style={{ width: '100%', marginTop: '1rem' }} disabled={submitting}>
-          <Send size={18} />
-          {submitting ? 'Salvando...' : `Confirmar Presença (${selectedServices.length} cultos)`}
-        </button>
       </form>
     </div>
   );

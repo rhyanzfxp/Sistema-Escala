@@ -34,28 +34,64 @@
   -webkit-tap-highlight-color: transparent;
 }
 
+html {
+  scroll-behavior: smooth;
+  height: 100%;
+}
+
 body {
   background-color: var(--bg-primary);
   color: var(--text-main);
-  min-height: 100vh;
-  overflow-x: hidden;
-  padding-bottom: 80px;
+  height: 100%;
+  overflow: hidden;
   background-image:
     radial-gradient(ellipse at 0% 0%, rgba(143, 173, 116, 0.07) 0%, transparent 55%),
     radial-gradient(ellipse at 100% 100%, rgba(201, 168, 122, 0.06) 0%, transparent 55%);
 }
 
+/* Sleek custom scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(22, 30, 18, 0.6);
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(201, 168, 122, 0.25);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(201, 168, 122, 0.5);
+}
+
 #root {
-  min-height: 100vh;
+  height: 100vh;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
+}
+
+/* The main scrollable area — only this scrolls */
+.main-scroll-area {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
 }
 
 .container {
   width: 100%;
   max-width: 1200px;
   margin: 0 auto;
-  padding: 1rem;
+  padding: 1rem 1rem 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .container {
+    padding: 1.25rem 1.5rem 2rem;
+  }
 }
 
 .card {
@@ -72,6 +108,10 @@ body {
   border-color: var(--border-active);
 }
 
+.card-compact {
+  padding: 0.85rem 1rem;
+}
+
 .btn {
   display: inline-flex;
   align-items: center;
@@ -83,7 +123,7 @@ body {
   border-radius: var(--radius-md);
   border: none;
   cursor: pointer;
-  min-height: 48px;
+  min-height: 44px;
   transition: all 0.2s ease;
 }
 
@@ -166,7 +206,7 @@ body {
   display: flex;
   flex-direction: column;
   gap: 0.4rem;
-  margin-bottom: 1rem;
+  margin-bottom: 0.85rem;
 }
 
 .form-label {
@@ -183,7 +223,7 @@ body {
   border-radius: var(--radius-md);
   color: var(--text-main);
   font-size: 1rem;
-  min-height: 48px;
+  min-height: 46px;
   outline: none;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
@@ -202,6 +242,7 @@ body {
   color: var(--text-main);
 }
 
+/* ── Modal ── */
 .modal-overlay {
   position: fixed;
   inset: 0;
@@ -228,7 +269,7 @@ body {
   border-top-left-radius: var(--radius-lg);
   border-top-right-radius: var(--radius-lg);
   padding: 1.5rem;
-  max-height: 90vh;
+  max-height: 88vh;
   overflow-y: auto;
   animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
@@ -236,20 +277,11 @@ body {
 @media (min-width: 640px) {
   .modal-content {
     border-radius: var(--radius-lg);
+    max-height: 85vh;
   }
 }
 
-@keyframes slideUp {
-  from {
-    transform: translateY(100%);
-    opacity: 0;
-  }
-  to {
-    transform: translateY(0);
-    opacity: 1;
-  }
-}
-
+/* ── Table ── */
 .table-responsive {
   width: 100%;
   overflow-x: auto;
@@ -261,21 +293,24 @@ body {
   width: 100%;
   border-collapse: collapse;
   text-align: left;
-  font-size: 0.9rem;
+  font-size: 0.875rem;
 }
 
 .schedule-table th {
   background: rgba(30, 42, 26, 0.98);
-  padding: 1rem;
+  padding: 0.8rem 1rem;
   color: var(--primary);
   font-weight: 700;
   border-bottom: 1px solid var(--border-color);
   white-space: nowrap;
   letter-spacing: 0.3px;
+  position: sticky;
+  top: 0;
+  z-index: 1;
 }
 
 .schedule-table td {
-  padding: 1rem;
+  padding: 0.8rem 1rem;
   border-bottom: 1px solid var(--border-color);
   background: rgba(44, 58, 38, 0.45);
 }
@@ -288,14 +323,15 @@ body {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  padding: 0.35rem 0.65rem;
+  padding: 0.3rem 0.6rem;
   background: rgba(201, 168, 122, 0.06);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-sm);
-  font-size: 0.85rem;
+  font-size: 0.82rem;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
+  white-space: nowrap;
 }
 
 .role-slot:hover {
@@ -309,6 +345,75 @@ body {
   border-style: dashed;
 }
 
+/* ── Accordion (AdminPanel service cards) ── */
+.accordion-item {
+  background: var(--bg-glass);
+  backdrop-filter: blur(14px);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-main);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.accordion-item.open {
+  border-color: var(--border-active);
+  box-shadow: var(--shadow-main), 0 0 0 1px var(--primary-glow);
+}
+
+.accordion-trigger {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.9rem 1.1rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.18s ease;
+}
+
+.accordion-trigger:hover {
+  background: rgba(201, 168, 122, 0.05);
+}
+
+.accordion-chevron {
+  flex-shrink: 0;
+  color: var(--text-muted);
+  transition: transform 0.25s ease;
+  margin-left: auto;
+}
+
+.accordion-item.open .accordion-chevron {
+  transform: rotate(180deg);
+  color: var(--primary);
+}
+
+.accordion-body {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.accordion-item.open .accordion-body {
+  grid-template-rows: 1fr;
+}
+
+.accordion-body-inner {
+  overflow: hidden;
+}
+
+.accordion-body-content {
+  padding: 0 1.1rem 1.1rem;
+  border-top: 1px solid var(--border-color);
+  padding-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+/* ── Responsive visibility ── */
 @media (max-width: 767px) {
   .desktop-only {
     display: none !important;
@@ -327,14 +432,24 @@ body {
   }
 }
 
+/* ── Animations ── */
 @keyframes spin {
   from { transform: rotate(0deg); }
   to   { transform: rotate(360deg); }
 }
 
 @keyframes slideUp {
-  from { opacity: 0; transform: translateY(12px); }
+  from { opacity: 0; transform: translateY(14px); }
   to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.spin {
+  animation: spin 0.8s linear infinite;
 }
 
 /* bg-deep fallback */

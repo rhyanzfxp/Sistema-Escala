@@ -47,33 +47,36 @@ function MainContent() {
   return (
     <>
       {loading && <LoadingScreen />}
-      <main className="container" style={{ flex: 1, paddingTop: '1.25rem', opacity: loading ? 0 : 1, transition: 'opacity 0.3s ease' }}>
-        {toast && (
-          <div style={{
-            position: 'fixed',
-            top: '80px',
-            right: '1rem',
-            zIndex: 1000,
-            background: toast.type === 'danger' ? 'rgba(239, 68, 68, 0.9)' : 'rgba(16, 185, 129, 0.9)',
-            backdropFilter: 'blur(8px)',
-            color: '#fff',
-            padding: '0.75rem 1.25rem',
-            borderRadius: '12px',
-            fontWeight: 600,
-            fontSize: '0.9rem',
-            boxShadow: 'var(--shadow-main)',
-            animation: 'slideUp 0.2s ease'
-          }}>
-            {toast.message}
-          </div>
-        )}
+      <div className="main-scroll-area">
+        <main className="container" style={{ opacity: loading ? 0 : 1, transition: 'opacity 0.3s ease' }}>
+          {toast && (
+            <div style={{
+              position: 'fixed',
+              top: '72px',
+              right: '1rem',
+              zIndex: 1000,
+              background: toast.type === 'danger' ? 'rgba(220, 60, 60, 0.95)' : 'rgba(16, 185, 129, 0.95)',
+              backdropFilter: 'blur(10px)',
+              color: '#fff',
+              padding: '0.7rem 1.2rem',
+              borderRadius: '12px',
+              fontWeight: 600,
+              fontSize: '0.88rem',
+              boxShadow: 'var(--shadow-main)',
+              animation: 'slideUp 0.2s ease',
+              maxWidth: 'calc(100vw - 2rem)'
+            }}>
+              {toast.message}
+            </div>
+          )}
 
-        {activeTab === 'schedule' && <ScheduleView />}
-        {activeTab === 'availability' && <AvailabilityForm />}
-        {activeTab === 'admin' && <AdminPanel />}
+          {activeTab === 'schedule' && <ScheduleView />}
+          {activeTab === 'availability' && <AvailabilityForm />}
+          {activeTab === 'admin' && <AdminPanel />}
 
-        <SwapModal />
-      </main>
+          <SwapModal />
+        </main>
+      </div>
     </>
   );
 }

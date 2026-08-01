@@ -2,7 +2,7 @@ import React, { useState, FormEvent } from 'react';
 import { useApp } from '../context/AppContext';
 import { updateServiceSchedule, addMember, clearAllSchedules, clearAllAvailability, togglePublishSchedule, formatDateBR } from '../services/api';
 import { Member, Service, Availability } from '../types/database';
-import { Shield, Save, UserPlus, Users, Trash2, Send, X, Check, Music, Disc, Mic, Volume2, Calendar, Radio, AlertTriangle } from 'lucide-react';
+import { Shield, Save, UserPlus, Users, Trash2, Send, X, Check, Music, Disc, Mic, Volume2, Calendar, Radio, AlertTriangle, ChevronDown } from 'lucide-react';
 
 interface EditFormState {
   keyboard_member: string;
@@ -43,6 +43,11 @@ export default function AdminPanel() {
   const [newMemberName, setNewMemberName] = useState<string>('');
   const [newMemberRole, setNewMemberRole] = useState<string>('Vocal');
   const [saving, setSaving] = useState<boolean>(false);
+  const [openAccordion, setOpenAccordion] = useState<number | null>(null);
+
+  const toggleAccordion = (id: number) => {
+    setOpenAccordion((prev) => (prev === id ? null : id));
+  };
 
   const filteredServices = services.filter((s) => church === 'Todas' || s.church === church);
   const isPublished = scheduleData.length > 0 && scheduleData.some((s) => s.published === 1);
@@ -212,10 +217,14 @@ export default function AdminPanel() {
         </div>
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-        <h3 style={{ fontSize: '1.15rem', fontWeight: 800 }}>Cultos e Escalamento</h3>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <h3 style={{ fontSize: '1.1rem', fontWeight: 800 }}>Cultos e Escalamento</h3>
+          <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>{filteredServices.length} culto{filteredServices.length !== 1 ? 's' : ''}</span>
+        </div>
 
         {filteredServices.map((service) => {
+          const isOpen = openAccordion === service.id;
           const currentSched = scheduleData.find((s) => s.service_id === service.id) || {
             keyboard_member: '-',
             guitar_member: '-',
@@ -224,70 +233,92 @@ export default function AdminPanel() {
             vocal_members: '-'
           };
           const serviceAvails = availabilityList.filter((a) => a.service_id === service.id);
+          const hasSchedule = [
+            currentSched.keyboard_member,
+            currentSched.guitar_member,
+            currentSched.bass_member,
+            currentSched.drums_member,
+            currentSched.vocal_members,
+          ].some((v) => v && v !== '-');
 
           return (
-            <div key={service.id} className="card" style={{ borderLeft: '4px solid var(--primary)', display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '0.75rem' }}>
-                <div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.2rem' }}>
+            <div key={service.id} className={`accordion-item${isOpen ? ' open' : ''}`}>
+              {/* Accordion Trigger */}
+              <button className="accordion-trigger" onClick={() => toggleAccordion(service.id)}>
+                <span style={{ borderLeft: '3px solid var(--primary)', paddingLeft: '0.6rem', display: 'flex', flexDirection: 'column', gap: '0.15rem', flex: 1, minWidth: 0 }}>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', flexWrap: 'wrap' }}>
                     <span className={`badge badge-${service.church.toLowerCase()}`}>{service.church}</span>
-                    <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 600 }}>
-                      <Calendar size={13} style={{ display: 'inline', verticalAlign: 'middle', marginRight: '3px' }} />
-                      {formatDateBR(service.date)} • {service.day_time}
+                    <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                      <Calendar size={12} /> {formatDateBR(service.date)} • {service.day_time}
                     </span>
-                  </div>
-                  <h4 style={{ fontSize: '1.1rem', fontWeight: 800 }}>{service.title}</h4>
-                </div>
-
-                <button
-                  className="btn btn-primary"
-                  style={{ padding: '0.5rem 1rem', fontSize: '0.85rem', height: '38px' }}
-                  onClick={() => openEditModal(service)}
-                >
-                  Montar / Editar Escala
-                </button>
-              </div>
-
-              <div style={{
-                background: 'rgba(10, 14, 23, 0.5)',
-                padding: '0.65rem 0.85rem',
-                borderRadius: '8px',
-                border: '1px solid var(--border-color)',
-                fontSize: '0.8rem'
-              }}>
-                <div style={{ fontWeight: 700, color: 'var(--primary)', marginBottom: '0.3rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-                  <Users size={14} /> Voluntários disponíveis ({serviceAvails.length}):
-                </div>
-                {serviceAvails.length === 0 ? (
-                  <span style={{ color: 'var(--text-dark)' }}>Nenhum integrante respondeu disponibilidade para este culto.</span>
-                ) : (
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.35rem' }}>
-                    {serviceAvails.map((a) => (
-                      <span
-                        key={a.id}
-                        style={{
-                          background: 'rgba(201, 168, 122, 0.12)',
-                          border: '1px solid rgba(201, 168, 122, 0.25)',
-                          color: '#e5c99f',
-                          padding: '0.2rem 0.5rem',
-                          borderRadius: '6px',
-                          fontWeight: 600,
-                          fontSize: '0.78rem'
-                        }}
-                      >
-                        {a.member_name} ({a.role})
+                    {serviceAvails.length > 0 && (
+                      <span style={{ fontSize: '0.7rem', background: 'rgba(143,173,116,0.15)', color: '#b4d498', border: '1px solid rgba(143,173,116,0.3)', borderRadius: '999px', padding: '0.1rem 0.45rem', fontWeight: 700 }}>
+                        {serviceAvails.length} vol.
                       </span>
-                    ))}
-                  </div>
-                )}
-              </div>
+                    )}
+                  </span>
+                  <span style={{ fontWeight: 700, fontSize: '0.95rem', color: 'var(--text-main)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {service.title}
+                  </span>
+                </span>
+                <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexShrink: 0 }}>
+                  {hasSchedule && (
+                    <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#4ade80', flexShrink: 0 }} title="Escala preenchida" />
+                  )}
+                  <ChevronDown size={18} className="accordion-chevron" />
+                </span>
+              </button>
 
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '0.6rem', fontSize: '0.82rem', background: 'rgba(255,255,255,0.02)', padding: '0.65rem 0.85rem', borderRadius: '8px' }}>
-                <div><span style={{ color: 'var(--text-muted)' }}>Teclado:</span> <strong>{currentSched.keyboard_member || '-'}</strong></div>
-                <div><span style={{ color: 'var(--text-muted)' }}>Violão:</span> <strong>{currentSched.guitar_member || '-'}</strong></div>
-                <div><span style={{ color: 'var(--text-muted)' }}>Baixo:</span> <strong>{currentSched.bass_member || '-'}</strong></div>
-                <div><span style={{ color: 'var(--text-muted)' }}>Bateria:</span> <strong>{currentSched.drums_member || '-'}</strong></div>
-                <div><span style={{ color: 'var(--text-muted)' }}>Vocais:</span> <strong>{currentSched.vocal_members || '-'}</strong></div>
+              {/* Accordion Body */}
+              <div className="accordion-body">
+                <div className="accordion-body-inner">
+                  <div className="accordion-body-content">
+                    {/* Escala atual */}
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: '0.5rem', fontSize: '0.82rem' }}>
+                      {[
+                        { label: 'Teclado', icon: <Music size={13} color="var(--primary)" />, value: currentSched.keyboard_member },
+                        { label: 'Violão', icon: <Volume2 size={13} color="var(--primary)" />, value: currentSched.guitar_member },
+                        { label: 'Baixo', icon: <Radio size={13} color="var(--primary)" />, value: currentSched.bass_member },
+                        { label: 'Bateria', icon: <Disc size={13} color="var(--primary)" />, value: currentSched.drums_member },
+                        { label: 'Vocais', icon: <Mic size={13} color="var(--primary)" />, value: currentSched.vocal_members },
+                      ].map(({ label, icon, value }) => (
+                        <div key={label} style={{ background: 'rgba(10,14,8,0.4)', padding: '0.45rem 0.65rem', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+                          <div style={{ color: 'var(--text-muted)', fontSize: '0.7rem', display: 'flex', alignItems: 'center', gap: '0.3rem', marginBottom: '0.15rem' }}>
+                            {icon} {label}
+                          </div>
+                          <div style={{ fontWeight: 700, color: value && value !== '-' ? 'var(--text-main)' : 'var(--text-dark)' }}>
+                            {value || '-'}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Voluntários disponíveis */}
+                    {serviceAvails.length > 0 && (
+                      <div style={{ background: 'rgba(10,14,8,0.4)', padding: '0.55rem 0.75rem', borderRadius: '8px', border: '1px solid var(--border-color)', fontSize: '0.8rem' }}>
+                        <div style={{ fontWeight: 700, color: 'var(--primary)', marginBottom: '0.4rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                          <Users size={13} /> Voluntários disponíveis ({serviceAvails.length})
+                        </div>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.3rem' }}>
+                          {serviceAvails.map((a) => (
+                            <span key={a.id} style={{ background: 'rgba(201,168,122,0.1)', border: '1px solid rgba(201,168,122,0.22)', color: '#e5c99f', padding: '0.15rem 0.45rem', borderRadius: '6px', fontWeight: 600, fontSize: '0.75rem' }}>
+                              {a.member_name} <span style={{ opacity: 0.65 }}>({a.role})</span>
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Action */}
+                    <button
+                      className="btn btn-primary"
+                      style={{ width: '100%', fontSize: '0.88rem' }}
+                      onClick={() => openEditModal(service)}
+                    >
+                      <Save size={15} /> Montar / Editar Escala
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           );

@@ -20,11 +20,8 @@ export default function BottomNav() {
 
   return (
     <nav style={{
-      position: 'fixed',
-      bottom: 0,
-      left: 0,
-      right: 0,
-      height: '65px',
+      flexShrink: 0,
+      height: '62px',
       background: 'rgba(36, 48, 32, 0.97)',
       backdropFilter: 'blur(14px)',
       borderTop: '1px solid var(--border-color)',
