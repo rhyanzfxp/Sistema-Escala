@@ -30,13 +30,25 @@ const FALLBACK_MEMBERS: Member[] = [
   { id: 16, name: 'RHAYZA', default_role: 'Vocal' }
 ];
 
+export function cleanServiceTitle(title: string): string {
+  if (!title) return '';
+  return title
+    .replace(/\s*\(MANHÃ\)/gi, '')
+    .replace(/\s*\(TARDE\)/gi, '')
+    .replace(/\s*\(NOITE\)/gi, '')
+    .replace(/\s+MANHÃ/gi, '')
+    .replace(/\s+TARDE/gi, '')
+    .replace(/\s+NOITE/gi, '')
+    .trim();
+}
+
 const FALLBACK_SERVICES: Service[] = [
   { id: 1, church: 'Itaperi', date: '2026-07-29', day_time: 'QUARTA 19:30', title: 'CULTO DA PALAVRA ITAPERI', week_num: 1 },
   { id: 2, church: 'Industrial', date: '2026-07-30', day_time: 'QUINTA 19:30', title: 'CULTO DA PALAVRA INDUSTRIAL', week_num: 1 },
-  { id: 3, church: 'Industrial', date: '2026-08-02', day_time: 'DOMINGO 10:00', title: 'CULTO INDUSTRIAL (MANHÃ)', week_num: 1 },
-  { id: 4, church: 'Industrial', date: '2026-08-02', day_time: 'DOMINGO 17:00', title: 'CULTO INDUSTRIAL (TARDE)', week_num: 1 },
-  { id: 5, church: 'Industrial', date: '2026-08-02', day_time: 'DOMINGO 19:00', title: 'CULTO INDUSTRIAL (NOITE)', week_num: 1 },
-  { id: 6, church: 'Itaperi', date: '2026-08-02', day_time: 'DOMINGO 18:00', title: 'CULTO ITAPERI (NOITE)', week_num: 1 }
+  { id: 3, church: 'Industrial', date: '2026-08-02', day_time: 'DOMINGO 10:00', title: 'CULTO INDUSTRIAL', week_num: 1 },
+  { id: 4, church: 'Industrial', date: '2026-08-02', day_time: 'DOMINGO 17:00', title: 'CULTO INDUSTRIAL', week_num: 1 },
+  { id: 5, church: 'Industrial', date: '2026-08-02', day_time: 'DOMINGO 19:00', title: 'CULTO INDUSTRIAL', week_num: 1 },
+  { id: 6, church: 'Itaperi', date: '2026-08-02', day_time: 'DOMINGO 18:00', title: 'CULTO ITAPERI', week_num: 1 }
 ];
 
 function saveToCache<T>(key: string, data: T): void {
@@ -97,8 +109,9 @@ export async function fetchServices(church?: string, month?: string): Promise<Se
       const { data, error } = await query;
       if (error) throw error;
       if (data) {
-        saveToCache(cacheKey, data);
-        return data as Service[];
+        const cleaned = data.map((s: any) => ({ ...s, title: cleanServiceTitle(s.title) }));
+        saveToCache(cacheKey, cleaned);
+        return cleaned as Service[];
       }
     } catch (err) {
       console.warn('Supabase fetchServices error, falling back to cache:', err);
@@ -107,7 +120,9 @@ export async function fetchServices(church?: string, month?: string): Promise<Se
 
   const cached = loadFromCache<Service[]>(cacheKey);
   if (cached) return cached;
-  return FALLBACK_SERVICES.filter(s => (!church || church === 'Todas' || s.church === church) && (!month || s.date.startsWith(month)));
+  return FALLBACK_SERVICES
+    .filter(s => (!church || church === 'Todas' || s.church === church) && (!month || s.date.startsWith(month)))
+    .map(s => ({ ...s, title: cleanServiceTitle(s.title) }));
 }
 
 export async function fetchSchedule(church?: string, month?: string): Promise<ScheduleItem[]> {
@@ -148,7 +163,7 @@ export async function fetchSchedule(church?: string, month?: string): Promise<Sc
           church: s.church,
           date: s.date,
           day_time: s.day_time,
-          title: s.title,
+          title: cleanServiceTitle(s.title),
           week_num: s.week_num,
           schedule_id: sc?.id,
           keyboard_member: sc?.keyboard_member || '-',

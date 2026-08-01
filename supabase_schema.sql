@@ -123,31 +123,35 @@ ON CONFLICT (name) DO NOTHING;
 INSERT INTO public.services (church, date, day_time, title, week_num) VALUES
   ('Itaperi',    '2026-07-29', 'QUARTA 19:30',  'CULTO DA PALAVRA ITAPERI',    1),
   ('Industrial', '2026-07-30', 'QUINTA 19:30',  'CULTO DA PALAVRA INDUSTRIAL', 1),
-  ('Industrial', '2026-08-02', 'DOMINGO 10:00', 'CULTO INDUSTRIAL (MANHÃ)',    1),
-  ('Industrial', '2026-08-02', 'DOMINGO 17:00', 'CULTO INDUSTRIAL (TARDE)',    1),
-  ('Industrial', '2026-08-02', 'DOMINGO 19:00', 'CULTO INDUSTRIAL (NOITE)',    1),
-  ('Itaperi',    '2026-08-02', 'DOMINGO 18:00', 'CULTO ITAPERI (NOITE)',       1),
+  ('Industrial', '2026-08-02', 'DOMINGO 10:00', 'CULTO INDUSTRIAL',            1),
+  ('Industrial', '2026-08-02', 'DOMINGO 17:00', 'CULTO INDUSTRIAL',            1),
+  ('Industrial', '2026-08-02', 'DOMINGO 19:00', 'CULTO INDUSTRIAL',            1),
+  ('Itaperi',    '2026-08-02', 'DOMINGO 18:00', 'CULTO ITAPERI',               1),
 
   ('Itaperi',    '2026-08-05', 'QUARTA 19:30',  'CULTO DA PALAVRA ITAPERI',    2),
   ('Industrial', '2026-08-06', 'QUINTA 19:30',  'CULTO DA PALAVRA INDUSTRIAL', 2),
-  ('Industrial', '2026-08-09', 'DOMINGO 10:00', 'CULTO INDUSTRIAL (MANHÃ)',    2),
-  ('Industrial', '2026-08-09', 'DOMINGO 17:00', 'CULTO INDUSTRIAL (TARDE)',    2),
-  ('Industrial', '2026-08-09', 'DOMINGO 19:00', 'CULTO INDUSTRIAL (NOITE)',    2),
-  ('Itaperi',    '2026-08-09', 'DOMINGO 18:00', 'CULTO ITAPERI (NOITE)',       2),
+  ('Industrial', '2026-08-09', 'DOMINGO 10:00', 'CULTO INDUSTRIAL',            2),
+  ('Industrial', '2026-08-09', 'DOMINGO 17:00', 'CULTO INDUSTRIAL',            2),
+  ('Industrial', '2026-08-09', 'DOMINGO 19:00', 'CULTO INDUSTRIAL',            2),
+  ('Itaperi',    '2026-08-09', 'DOMINGO 18:00', 'CULTO ITAPERI',               2),
 
   ('Itaperi',    '2026-08-12', 'QUARTA 19:30',  'CULTO DA PALAVRA ITAPERI',    3),
   ('Industrial', '2026-08-13', 'QUINTA 19:30',  'CULTO DA PALAVRA INDUSTRIAL', 3),
-  ('Industrial', '2026-08-16', 'DOMINGO 10:00', 'CULTO INDUSTRIAL (MANHÃ)',    3),
-  ('Industrial', '2026-08-16', 'DOMINGO 17:00', 'CULTO INDUSTRIAL (TARDE)',    3),
-  ('Industrial', '2026-08-16', 'DOMINGO 19:00', 'CULTO INDUSTRIAL (NOITE)',    3),
-  ('Itaperi',    '2026-08-16', 'DOMINGO 18:00', 'CULTO ITAPERI (NOITE)',       3),
+  ('Industrial', '2026-08-16', 'DOMINGO 10:00', 'CULTO INDUSTRIAL',            3),
+  ('Industrial', '2026-08-16', 'DOMINGO 17:00', 'CULTO INDUSTRIAL',            3),
+  ('Industrial', '2026-08-16', 'DOMINGO 19:00', 'CULTO INDUSTRIAL',            3),
+  ('Itaperi',    '2026-08-16', 'DOMINGO 18:00', 'CULTO ITAPERI',               3),
 
   ('Itaperi',    '2026-08-19', 'QUARTA 19:30',  'CULTO DA PALAVRA ITAPERI',    4),
   ('Industrial', '2026-08-20', 'QUINTA 19:30',  'CULTO DA PALAVRA INDUSTRIAL', 4),
-  ('Industrial', '2026-08-23', 'DOMINGO 10:00', 'CULTO INDUSTRIAL (MANHÃ)',    4),
-  ('Industrial', '2026-08-23', 'DOMINGO 17:00', 'CULTO INDUSTRIAL (TARDE)',    4),
-  ('Industrial', '2026-08-23', 'DOMINGO 19:00', 'CULTO INDUSTRIAL (NOITE)',    4),
-  ('Itaperi',    '2026-08-23', 'DOMINGO 18:00', 'CULTO ITAPERI (NOITE)',       4);
+  ('Industrial', '2026-08-23', 'DOMINGO 10:00', 'CULTO INDUSTRIAL',            4),
+  ('Industrial', '2026-08-23', 'DOMINGO 17:00', 'CULTO INDUSTRIAL',            4),
+  ('Industrial', '2026-08-23', 'DOMINGO 19:00', 'CULTO INDUSTRIAL',            4),
+  ('Itaperi',    '2026-08-23', 'DOMINGO 18:00', 'CULTO ITAPERI',               4);
+
+-- Limpar sufixos de horário dos títulos existentes se a tabela já estivesse populada
+UPDATE public.services SET title = 'CULTO INDUSTRIAL' WHERE title LIKE 'CULTO INDUSTRIAL%';
+UPDATE public.services SET title = 'CULTO ITAPERI' WHERE title LIKE 'CULTO ITAPERI%';
 
 -- Inicializar registros em `schedule` para cada serviço
 INSERT INTO public.schedule (service_id, keyboard_member, guitar_member, bass_member, drums_member, vocal_members)
