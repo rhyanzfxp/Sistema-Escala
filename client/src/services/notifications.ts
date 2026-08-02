@@ -2,7 +2,7 @@ import { ScheduleItem } from '../types/database';
 import { formatDateBR } from './api';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 
-export const VAPID_PUBLIC_KEY = import.meta.env.VITE_VAPID_PUBLIC_KEY || 'BJf9QxLYaAlWzMsZgB8qv6UE5IVpmxwT1BdKIla1IixkqTx8mlKTsJfbdT3IVW8OMNc2IrUM1gtvEb5GLkQqwsU';
+export const VAPID_PUBLIC_KEY = import.meta.env.VITE_VAPID_PUBLIC_KEY || 'BE0cmygORmaIm-Nvk7oROFRKHqPUSlXzs1cnPLrMUnx2w1pX8lp2i8ImhW6dZOAQsPG8gItoQjZNAvehHFCz2bw';
 
 function urlBase64ToUint8Array(base64String: string): Uint8Array {
   const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
