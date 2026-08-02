@@ -53,15 +53,17 @@ export async function subscribeUserToPush(memberName: string): Promise<{ success
 
   try {
     let sub = await reg.pushManager.getSubscription();
-    if (!sub) {
-      const convertedKey = urlBase64ToUint8Array(VAPID_PUBLIC_KEY);
-      console.log('[Push] VAPID key length:', convertedKey.length, 'first byte:', convertedKey[0]);
-      // Passa o Uint8Array diretamente (não .buffer) para evitar bytes extras
-      sub = await reg.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: new Uint8Array(convertedKey) as unknown as ArrayBuffer
-      });
+    if (sub) {
+      // Cancela assinatura antiga antes de criar nova (garante chave VAPID atualizada)
+      await sub.unsubscribe();
+      sub = null;
     }
+    console.log('[Push] Usando VAPID key:', VAPID_PUBLIC_KEY.substring(0, 20) + '...');
+    // Passa a chave como string base64url diretamente (suportado pela spec)
+    sub = await reg.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: VAPID_PUBLIC_KEY
+    });
 
     const cleanName = memberName.toUpperCase().trim();
     const subJSON = sub.toJSON();
