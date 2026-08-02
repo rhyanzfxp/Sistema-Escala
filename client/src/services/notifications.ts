@@ -18,9 +18,10 @@ function urlBase64ToUint8Array(base64String: string): Uint8Array {
 export async function registerServiceWorker(): Promise<ServiceWorkerRegistration | null> {
   if (!('serviceWorker' in navigator)) return null;
   try {
-    const reg = await navigator.serviceWorker.register('/sw.js', { scope: '/' });
-    await navigator.serviceWorker.ready;
-    return reg;
+    await navigator.serviceWorker.register('/sw.js', { scope: '/' });
+    // Usa a registration do ready (garantido com SW ativo)
+    const readyReg = await navigator.serviceWorker.ready;
+    return readyReg;
   } catch (err) {
     console.error('Erro ao registrar Service Worker:', err);
     return null;
@@ -54,9 +55,11 @@ export async function subscribeUserToPush(memberName: string): Promise<{ success
     let sub = await reg.pushManager.getSubscription();
     if (!sub) {
       const convertedKey = urlBase64ToUint8Array(VAPID_PUBLIC_KEY);
+      console.log('[Push] VAPID key length:', convertedKey.length, 'first byte:', convertedKey[0]);
+      // Passa o Uint8Array diretamente (não .buffer) para evitar bytes extras
       sub = await reg.pushManager.subscribe({
         userVisibleOnly: true,
-        applicationServerKey: convertedKey.buffer as ArrayBuffer
+        applicationServerKey: new Uint8Array(convertedKey) as unknown as ArrayBuffer
       });
     }
 
