@@ -79,10 +79,17 @@ export async function subscribeUserToPush(
 
   // Pede permissão
   const permission = await Notification.requestPermission();
+  if (permission === 'denied') {
+    return {
+      success: false,
+      message:
+        '❌ Permissão negada. Se estiver em modo privado/anônimo, saia e use uma janela normal. Caso contrário, habilite nas configurações do site no navegador.',
+    };
+  }
   if (permission !== 'granted') {
     return {
       success: false,
-      message: 'Permissão de notificação foi negada. Habilite nas configurações do navegador.',
+      message: '⚠️ Permissão de notificação não concedida. Tente novamente e clique em "Permitir".',
     };
   }
 
