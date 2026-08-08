@@ -25,10 +25,28 @@ export async function registerServiceWorker(): Promise<ServiceWorkerRegistration
     return null;
   }
   try {
-    // Registra o SW
     await navigator.serviceWorker.register('/sw.js', { scope: '/' });
-    // Aguarda até estar ativo (resolve com o SW ativo)
+    // Aguarda até haver um SW ativo
     const reg = await navigator.serviceWorker.ready;
+
+    // navigator.serviceWorker.ready pode resolver com SW ainda em 'activating'.
+    // Precisamos aguardar 'activated' para o pushManager funcionar corretamente.
+    if (reg.active && reg.active.state !== 'activated') {
+      await new Promise<void>((resolve) => {
+        const sw = reg.active!;
+        const onStateChange = () => {
+          console.log('[SW] Estado do SW:', sw.state);
+          if (sw.state === 'activated') {
+            sw.removeEventListener('statechange', onStateChange);
+            resolve();
+          }
+        };
+        sw.addEventListener('statechange', onStateChange);
+        // Timeout de segurança: 3s
+        setTimeout(resolve, 3000);
+      });
+    }
+
     console.log('[SW] Service Worker ativo:', reg.active?.state);
     return reg;
   } catch (err) {
