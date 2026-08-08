@@ -2,6 +2,16 @@
   "version": 2,
   "buildCommand": "cd client && npm install && npm run build",
   "outputDirectory": "client/dist",
+  "headers": [
+    {
+      "source": "/sw.js",
+      "headers": [
+        { "key": "Content-Type", "value": "application/javascript; charset=utf-8" },
+        { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" },
+        { "key": "Service-Worker-Allowed", "value": "/" }
+      ]
+    }
+  ],
   "crons": [
     {
       "path": "/api/cron-reminders",
@@ -22,7 +32,7 @@
       "destination": "/api/index.js"
     },
     {
-      "source": "/((?!api/|sw\\.js|logo\\.jpg|assets/|.*\\..*).*)",
+      "source": "/(.*)",
       "destination": "/index.html"
     }
   ]
