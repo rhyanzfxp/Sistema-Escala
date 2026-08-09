@@ -1,10 +1,24 @@
 import React, { useState, FormEvent } from 'react';
 import { useApp } from '../context/AppContext';
 import { subscribeUserToPush } from '../services/notifications';
-import { Bell, Check, X, User } from 'lucide-react';
+import { Bell, Check, X, User, Smartphone } from 'lucide-react';
 
 interface NotificationModalProps {
   onClose: () => void;
+}
+
+// Detecta se é iOS Safari (iPhone/iPad)
+function isIosSafari(): boolean {
+  const ua = navigator.userAgent;
+  const isIos = /iphone|ipad|ipod/i.test(ua);
+  const isSafari = /safari/i.test(ua) && !/chrome|crios|fxios/i.test(ua);
+  return isIos && isSafari;
+}
+
+// Detecta se o app já está instalado na tela inicial (PWA)
+function isRunningAsPwa(): boolean {
+  return window.matchMedia('(display-mode: standalone)').matches ||
+    (window.navigator as Navigator & { standalone?: boolean }).standalone === true;
 }
 
 export default function NotificationModal({ onClose }: NotificationModalProps) {
@@ -12,6 +26,8 @@ export default function NotificationModal({ onClose }: NotificationModalProps) {
   const savedName = localStorage.getItem('le_user_member_name') || '';
   const [selectedName, setSelectedName] = useState<string>(savedName);
   const [submitting, setSubmitting] = useState<boolean>(false);
+
+  const showIosInstallWarning = isIosSafari() && !isRunningAsPwa();
 
   const handleSubscribe = async (e: FormEvent) => {
     e.preventDefault();
@@ -70,6 +86,33 @@ export default function NotificationModal({ onClose }: NotificationModalProps) {
             Receba um aviso automático no seu celular ou computador <strong>1 semana (7 dias) antes</strong> de cada culto em que estiver escalado.
           </p>
         </div>
+
+        {/* Aviso especial para iPhone/iPad no Safari */}
+        {showIosInstallWarning && (
+          <div style={{
+            background: 'rgba(201, 168, 122, 0.12)',
+            border: '1px solid rgba(201, 168, 122, 0.4)',
+            borderRadius: '10px',
+            padding: '0.85rem 1rem',
+            marginBottom: '1rem',
+            fontSize: '0.82rem',
+            color: 'var(--text-muted)',
+            lineHeight: 1.6
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.5rem', color: 'var(--primary)', fontWeight: 700 }}>
+              <Smartphone size={15} /> iPhone / iPad — Passo a passo:
+            </div>
+            <ol style={{ margin: 0, paddingLeft: '1.2rem' }}>
+              <li>Toque no ícone <strong>compartilhar</strong> (⬆️) no Safari</li>
+              <li>Toque em <strong>"Adicionar à Tela de Início"</strong></li>
+              <li>Abra o app pela tela inicial</li>
+              <li>Volte aqui e ative as notificações</li>
+            </ol>
+            <p style={{ margin: '0.5rem 0 0', fontSize: '0.78rem', opacity: 0.75 }}>
+              ⚠️ No iPhone, notificações só funcionam quando o app está instalado na tela inicial (iOS 16.4+).
+            </p>
+          </div>
+        )}
 
         <form onSubmit={handleSubscribe}>
           <div className="form-group">

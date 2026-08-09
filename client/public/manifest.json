@@ -1,0 +1,25 @@
+{
+  "name": "Escala - Ministério de Louvor",
+  "short_name": "Escala Louvor",
+  "description": "Sistema de escala para o ministério de louvor",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#1a1f16",
+  "theme_color": "#c9a87a",
+  "lang": "pt-BR",
+  "icons": [
+    {
+      "src": "/logo.jpg",
+      "sizes": "192x192",
+      "type": "image/jpeg",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/logo.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg",
+      "purpose": "any maskable"
+    }
+  ]
+}
