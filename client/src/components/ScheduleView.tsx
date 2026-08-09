@@ -1,15 +1,29 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { formatDateBR } from '../services/api';
-import { RefreshCw, Share2, ArrowRightLeft, Music, Volume2, Radio, Disc, Mic, Calendar, AlertCircle, CalendarCheck, Clock } from 'lucide-react';
+import { exportScheduleToExcel } from '../services/excelExport';
+import { RefreshCw, Share2, FileSpreadsheet, ArrowRightLeft, Music, Volume2, Radio, Disc, Mic, Calendar, AlertCircle, CalendarCheck, Clock } from 'lucide-react';
 import ExportCard from './ExportCard';
 
 export default function ScheduleView() {
-  const { scheduleData, church, setSwapModal, isAdmin, loading, loadAllData, setActiveTab } = useApp();
+  const { scheduleData, church, setSwapModal, isAdmin, loading, loadAllData, setActiveTab, month, showToast } = useApp();
   const [showExportModal, setShowExportModal] = useState<boolean>(false);
+  const [exportingExcel, setExportingExcel] = useState<boolean>(false);
 
   const filteredSchedule = scheduleData.filter((item) => church === 'Todas' || item.church === church);
   const isPublished = filteredSchedule.length > 0 && filteredSchedule.some((item) => item.published === 1);
+
+  const handleQuickExportExcel = async () => {
+    setExportingExcel(true);
+    try {
+      await exportScheduleToExcel(filteredSchedule, month, church);
+      showToast('Planilha Excel (.xlsx) gerada com sucesso!', 'success');
+    } catch (err: any) {
+      showToast(err.message || 'Erro ao exportar planilha Excel', 'danger');
+    } finally {
+      setExportingExcel(false);
+    }
+  };
 
   const openSwap = (
     serviceId: number,
@@ -97,9 +111,18 @@ export default function ScheduleView() {
           </p>
         </div>
 
-        <div style={{ display: 'flex', gap: '0.5rem' }}>
+        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
           <button className="btn btn-secondary" onClick={loadAllData} title="Atualizar Escala">
             <RefreshCw size={16} className={loading ? 'spin' : ''} />
+          </button>
+          <button
+            className="btn btn-secondary"
+            onClick={handleQuickExportExcel}
+            disabled={exportingExcel}
+            style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', borderColor: 'rgba(34, 197, 94, 0.4)', color: '#4ade80', fontWeight: 700 }}
+            title="Exportar Escala em Excel (.xlsx)"
+          >
+            <FileSpreadsheet size={16} /> {exportingExcel ? 'Baixando...' : 'Exportar Excel'}
           </button>
           <button className="btn btn-primary" onClick={() => setShowExportModal(true)}>
             <Share2 size={16} /> Compartilhar WhatsApp

@@ -1,9 +1,10 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import html2canvas from 'html2canvas';
 import { useApp } from '../context/AppContext';
 import { formatDateBR } from '../services/api';
 import { ScheduleItem } from '../types/database';
-import { Download, X } from 'lucide-react';
+import { exportScheduleToExcel } from '../services/excelExport';
+import { Download, FileSpreadsheet, X } from 'lucide-react';
 
 interface ExportCardProps {
   onClose: () => void;
@@ -11,8 +12,9 @@ interface ExportCardProps {
 }
 
 export default function ExportCard({ onClose, scheduleItems }: ExportCardProps) {
-  const { church, month, showToast } = useApp();
+  const { church, month, showToast, scheduleData } = useApp();
   const cardRef = useRef<HTMLDivElement>(null);
+  const [exportingExcel, setExportingExcel] = useState<boolean>(false);
 
   const handleDownloadImage = async () => {
     if (!cardRef.current) return;
@@ -33,11 +35,26 @@ export default function ExportCard({ onClose, scheduleItems }: ExportCardProps) 
     }
   };
 
+  const handleExportExcel = async () => {
+    setExportingExcel(true);
+    try {
+      // Exporta todos os itens do mês (ou os filtrados)
+      const itemsToExport = scheduleItems.length > 0 ? scheduleItems : scheduleData;
+      await exportScheduleToExcel(itemsToExport, month, church);
+      showToast('Planilha Excel (.xlsx) gerada com sucesso!', 'success');
+      onClose();
+    } catch (err: any) {
+      showToast(err.message || 'Erro ao exportar planilha Excel', 'danger');
+    } finally {
+      setExportingExcel(false);
+    }
+  };
+
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content" style={{ maxWidth: '680px' }} onClick={(e) => e.stopPropagation()}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-          <h3 style={{ fontSize: '1.2rem', fontWeight: 800 }}>Exportar para WhatsApp</h3>
+          <h3 style={{ fontSize: '1.2rem', fontWeight: 800 }}>Exportar Escala do Mês</h3>
           <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}>
             <X size={20} />
           </button>
@@ -99,11 +116,19 @@ export default function ExportCard({ onClose, scheduleItems }: ExportCardProps) 
           </div>
         </div>
 
-        <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1.25rem' }}>
-          <button className="btn btn-secondary" style={{ flex: 1 }} onClick={onClose}>
+        <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1.25rem', flexWrap: 'wrap' }}>
+          <button className="btn btn-secondary" onClick={onClose} style={{ minWidth: '90px' }}>
             Cancelar
           </button>
-          <button className="btn btn-primary" style={{ flex: 1 }} onClick={handleDownloadImage}>
+          <button
+            className="btn btn-secondary"
+            style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem', borderColor: 'rgba(34, 197, 94, 0.4)', color: '#4ade80' }}
+            onClick={handleExportExcel}
+            disabled={exportingExcel}
+          >
+            <FileSpreadsheet size={18} /> {exportingExcel ? 'Gerando Excel...' : 'Baixar Planilha Excel (.xlsx)'}
+          </button>
+          <button className="btn btn-primary" style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem' }} onClick={handleDownloadImage}>
             <Download size={18} /> Baixar Imagem (PNG)
           </button>
         </div>
