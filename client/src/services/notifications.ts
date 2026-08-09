@@ -220,7 +220,11 @@ export function checkUpcomingScheduleReminders(scheduleList: ScheduleItem[]) {
       item.bass_member,
       item.drums_member,
       item.vocal_members,
-    ].some((val) => val && val.toUpperCase().includes(upperName));
+    ].some((val) => {
+      if (!val || val === '-' || val === 'CONVIDADO') return false;
+      const namesInRole = val.split('/').map((n) => n.trim().toUpperCase());
+      return namesInRole.includes(upperName);
+    });
 
     if (!isMemberEscalated) return;
 
