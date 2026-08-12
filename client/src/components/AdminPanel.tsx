@@ -417,7 +417,7 @@ export default function AdminPanel() {
                     )}
                   </div>
 
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.85rem' }}>
+                  <div className="admin-role-grid">
                     {roleFields.map(({ key, label, role, icon }) => {
                       const filtered = filterByRole(members, role);
                       return (

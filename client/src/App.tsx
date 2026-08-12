@@ -47,14 +47,14 @@ function MainContent() {
   return (
     <>
       {loading && <LoadingScreen />}
-      <div className="main-scroll-area">
-        <main className="container" style={{ opacity: loading ? 0 : 1, transition: 'opacity 0.3s ease' }}>
+      <div className="main-scroll-area" style={{ position: 'relative', zIndex: 1 }}>
+        <main className="container" style={loading ? { opacity: 0, transition: 'opacity 0.3s ease' } : { transition: 'opacity 0.3s ease' }}>
           {toast && (
             <div style={{
               position: 'fixed',
               top: '72px',
               right: '1rem',
-              zIndex: 1000,
+              zIndex: 10001,
               background: toast.type === 'danger' ? 'rgba(220, 60, 60, 0.95)' : 'rgba(16, 185, 129, 0.95)',
               backdropFilter: 'blur(10px)',
               color: '#fff',
